@@ -13,7 +13,7 @@ Login URL:  http://localhost:8888  (the proxy handles forwarding)
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.request, urllib.error, ssl, os, mimetypes
 
-TARGET  = "https://tpaci.bswhealth.org"   # ← your APIC
+TARGET  = "https://yourapic.url.com"   # ← your APIC
 PORT    = 8888
 WEBROOT = os.path.dirname(os.path.abspath(__file__))  # serve files from same folder
 
