@@ -631,7 +631,7 @@
       </div>
       <div class="form-group">
         <label>APIC URL</label>
-        <input type="url" id="apic-url" value="https://apic.example.com" placeholder="https://apic.example.com">
+        <input type="url" id="apic-url" value="https://tpaci.bswhealth.org" placeholder="https://apic.example.com">
       </div>
       <div class="form-group">
         <label>Username</label>
@@ -2236,7 +2236,7 @@ function toggleAccordion(id) {
 }
 
 function buildScripts() {
-  const url = STATE.apicUrl || 'https://apic.example.com';
+  const url = STATE.apicUrl || 'https://tpaci.bswhealth.org';
 
   const proxyEl = document.getElementById('code-proxy');
   if (proxyEl) {

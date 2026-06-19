@@ -8,6 +8,8 @@
 !aci-manager.html
 !aci-proxy.py
 !README.md
+!LICENSE
+!Capture.png
 !.gitignore
 
 # Blacklist sensitive, temporary, or external folders/files
