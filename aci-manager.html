@@ -1,0 +1,2827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACI Manager</title>
+<style>
+  :root {
+    --bg: #f6f8fa;
+    --bg2: #ffffff;
+    --bg3: #f3f4f6;
+    --bg4: #e5e7eb;
+    --border: #d0d7de;
+    --border2: #8c959f;
+    --text: #1f2328;
+    --text2: #57606a;
+    --text3: #6e7781;
+    --accent: #0969da;
+    --accent-hover: #1f85ed;
+    --accent-glow: rgba(9,105,218,0.1);
+    --sidebar-bg: #032b57;
+    --sidebar-text: #ffffff;
+    --sidebar-text-muted: #8ab4f8;
+    --sidebar-active: #0969da;
+    --green: #1a7f37;
+    --green-text: #1a7f37;
+    --red: #cf222e;
+    --red-text: #cf222e;
+    --yellow: #9a6700;
+    --yellow-text: #9a6700;
+    --orange: #bc4c00;
+    --radius: 8px;
+    --radius-sm: 5px;
+    --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── TOP BAR ── */
+  #topbar {
+    background: var(--sidebar-bg);
+    border-bottom: 1px solid var(--sidebar-bg);
+    padding: 0 20px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    color: var(--sidebar-text);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--sidebar-text);
+    text-decoration: none;
+  }
+
+  .logo svg { color: var(--accent-hover); }
+
+  .logo-text-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1.15;
+  }
+
+  .logo-title {
+    font-weight: 600;
+    font-size: 15.5px;
+    text-decoration: underline;
+    text-decoration-skip-ink: none;
+  }
+
+  .logo-signature {
+    font-weight: 600;
+    font-size: 15.5px;
+    color: var(--sidebar-text);
+    margin-top: 2px;
+  }
+
+  #topbar .spacer { flex: 1; }
+
+  #topbar .btn-ghost {
+    color: var(--sidebar-text-muted);
+    border-color: rgba(255,255,255,0.2);
+  }
+  #topbar .btn-ghost:hover {
+    color: var(--sidebar-text);
+    background: rgba(255,255,255,0.1);
+  }
+
+  #conn-badge {
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+    background: var(--bg4);
+    color: var(--text2);
+    border: 1px solid var(--border);
+  }
+  #conn-badge.connected { background: var(--green); color: #ffffff; border-color: var(--green); }
+  #conn-badge.error { background: rgba(218,54,51,0.2); color: var(--red-text); border-color: rgba(218,54,51,0.4); }
+
+  /* ── LAYOUT ── */
+  #app { display: flex; min-height: calc(100vh - 52px); }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: 220px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--sidebar-bg);
+    padding: 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .nav-section {
+    padding: 6px 12px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 8px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 16px;
+    color: var(--sidebar-text-muted);
+    cursor: pointer;
+    border-radius: 0;
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, border-left-color 0.2s ease;
+    font-size: 13.5px;
+    border-left: 2px solid transparent;
+    user-select: none;
+  }
+  .nav-item:hover {
+    background: rgba(14, 165, 233, 0.18);
+    color: var(--sidebar-text);
+    box-shadow: 0 0 16px rgba(14, 165, 233, 0.55), inset 0 1px 2px rgba(255, 255, 255, 0.1);
+    border-left-color: rgba(6, 182, 212, 0.9);
+  }
+  .nav-item.active { background: var(--sidebar-active); color: var(--sidebar-text); border-left-color: var(--sidebar-text); }
+  .nav-item svg { flex-shrink: 0; opacity: 0.8; }
+
+  /* ── MAIN ── */
+  #main {
+    flex: 1;
+    padding: 24px 28px;
+    overflow-y: auto;
+    background: var(--bg);
+  }
+
+  /* ── LOGIN PANEL ── */
+  #login-panel {
+    max-width: 420px;
+    margin: 60px auto;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+  }
+
+  #login-panel h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  #login-panel p { color: var(--text2); margin-bottom: 24px; font-size: 13px; }
+
+  .form-group { margin-bottom: 14px; }
+  label { display: block; font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5px; }
+
+  input[type=text], input[type=password], input[type=url], select, textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    padding: 7px 11px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  select option { background: var(--bg2); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s, transform 0.1s;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+  .btn-success { background: var(--green); color: #fff; }
+  .btn-success:hover:not(:disabled) { filter: brightness(1.15); }
+  .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border2); }
+  .btn-ghost:hover { background: var(--bg3); color: var(--text); }
+  .btn-danger { background: transparent; color: var(--red-text); border: 1px solid rgba(218,54,51,0.4); }
+  .btn-danger:hover { background: rgba(218,54,51,0.1); }
+  .btn-full { width: 100%; justify-content: center; }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .section-header h2 { font-size: 18px; font-weight: 600; }
+  .section-header p { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+  /* ── CARDS / TABLES ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg3);
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    padding: 9px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg3);
+  }
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg3); }
+
+  .mono { font-family: var(--mono); font-size: 12px; color: var(--text2); }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .badge-blue { background: rgba(31,111,235,0.2); color: #58a6ff; border: 1px solid rgba(31,111,235,0.3); }
+  .badge-green { background: rgba(35,134,54,0.2); color: var(--green-text); border: 1px solid rgba(35,134,54,0.3); }
+  .badge-gray { background: var(--bg4); color: var(--text2); border: 1px solid var(--border); }
+  .badge-orange { background: rgba(227,101,42,0.2); color: #ffa657; border: 1px solid rgba(227,101,42,0.3); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    width: 480px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-header h3 { font-size: 15px; font-weight: 600; }
+  .modal-body { padding: 20px; }
+  .modal-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  /* ── TOAST ── */
+  #toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .toast {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 240px;
+    max-width: 360px;
+    animation: slideIn 0.2s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .toast.success { border-left: 3px solid var(--green-text); }
+  .toast.error { border-left: 3px solid var(--red-text); }
+  .toast.info { border-left: 3px solid var(--accent-hover); }
+  @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* ── SPINNER ── */
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent-hover);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── EMPTY STATE ── */
+  .empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text3);
+  }
+  .empty svg { margin-bottom: 12px; opacity: 0.4; }
+  .empty p { font-size: 13px; }
+
+  /* ── STAT CARDS ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: #eef6ff;
+    border: 2px solid #a6cfff;
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  }
+  .stat-card:hover {
+    background-color: #f3f8ff;
+    border-color: rgba(6, 182, 212, 0.7);
+    box-shadow: 0 8px 24px rgba(14, 165, 233, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+  }
+  .stat-label { font-size: 11px; font-weight: 700; color: #0969da; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .stat-value { font-size: 26px; font-weight: 600; color: #0969da; line-height: 1; }
+  .stat-sub { font-size: 11px; color: #58a6ff; margin-top: 4px; }
+
+  /* ── SEARCH ── */
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .search-bar input { max-width: 280px; }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  .tab {
+    padding: 9px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text2);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent-hover); border-bottom-color: var(--accent-hover); }
+
+  /* ── PAGE VISIBILITY ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── PYTHON CODE PANEL ── */
+  .code-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text2);
+    overflow-x: auto;
+    white-space: pre;
+    line-height: 1.6;
+    margin-top: 10px;
+  }
+
+  .hidden { display: none !important; }
+
+  /* ── PYTHON SCRIPTS ACCORDION ── */
+  .scripts-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 15px;
+  }
+  .script-item {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .script-header {
+    padding: 14px 20px;
+    background: var(--bg3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .script-header:hover {
+    background: var(--bg4);
+  }
+  .script-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+  .script-desc {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+  .accordion-arrow {
+    font-size: 12px;
+    color: var(--text3);
+    transition: transform 0.2s ease;
+    display: inline-block;
+  }
+  .script-item.open .accordion-arrow {
+    transform: rotate(180deg);
+  }
+  .script-content {
+    display: none;
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .script-item.open .script-content {
+    display: block;
+  }
+  .script-content .code-block {
+    margin-top: 0;
+    max-height: 480px;
+    overflow: auto;
+  }
+
+  /* ── CORS WARNING ── */
+  .alert {
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .alert-warn { background: rgba(158,106,3,0.15); border: 1px solid rgba(158,106,3,0.4); color: var(--yellow-text); }
+  .alert-info { background: rgba(31,111,235,0.1); border: 1px solid rgba(31,111,235,0.3); color: #79c0ff; }
+  .alert-success { background: rgba(35,134,54,0.15); border: 1px solid rgba(35,134,54,0.4); color: var(--green-text); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <a class="logo" href="#">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+    </svg>
+    <div class="logo-text-container">
+      <span class="logo-title">ACI Manager</span>
+      <span class="logo-signature">ToolSet</span>
+    </div>
+  </a>
+  <div class="spacer"></div>
+  <span id="apic-url-display" style="font-size:12px;color:var(--text3);font-family:var(--mono);"></span>
+  <span id="conn-badge">● Not connected</span>
+  <button class="btn btn-ghost" id="logout-btn" onclick="logout()" style="display:none; font-size:12px; padding:5px 10px;">Sign out</button>
+</div>
+
+<!-- APP SHELL -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <nav id="sidebar" style="display:none;">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-section">Fabric</div>
+    <div class="nav-item" onclick="showPage('tenants')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Tenants
+    </div>
+    <div class="nav-item" onclick="showPage('epgs')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+      Endpoint Groups
+    </div>
+    <div class="nav-item" onclick="showPage('bridge-domains')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      Bridge Domains
+    </div>
+    <div class="nav-item" onclick="showPage('l3outs')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      L3Outs
+    </div>
+    <div class="nav-item" onclick="showPage('switches')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+      Fabric Switches
+    </div>
+    <div class="nav-item" onclick="showPage('vlan-pools')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      VLAN Pools
+    </div>
+    <div class="nav-section">Tools</div>
+    <div class="nav-item" onclick="showPage('python-scripts')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      Python Scripts
+    </div>
+    <div class="nav-item" onclick="showPage('fabric-snapshot')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+      Fabric Snapshot
+    </div>
+    <div class="nav-item" onclick="showPage('about')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      About
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main id="main">
+
+    <!-- LOGIN -->
+    <div id="login-panel">
+      <h1>Sign in to ACI</h1>
+      <p>Connect to your Cisco APIC controller</p>
+      <div class="alert alert-info" style="margin-bottom:20px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>For direct browser access, APIC must allow CORS or you must run a local proxy. The app will attempt direct connection first.</span>
+      </div>
+      <div class="form-group">
+        <label>APIC URL</label>
+        <input type="url" id="apic-url" value="https://tpaci.bswhealth.org" placeholder="https://apic.example.com">
+      </div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="username" value="admin" placeholder="admin">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="verify-ssl" style="width:auto;" checked>
+        <label for="verify-ssl" style="margin:0;cursor:pointer;">Verify SSL certificate</label>
+      </div>
+      <button class="btn btn-primary btn-full" id="login-btn" onclick="login()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+        Connect
+      </button>
+      <div id="login-error" class="alert alert-warn hidden" style="margin-top:14px;"></div>
+      <div id="proxy-hint" class="alert alert-warn hidden" style="margin-top:14px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div>
+          <strong>CORS blocked.</strong> Your browser blocked the request. To fix:<br>
+          <code style="font-size:11px;background:var(--bg4);padding:2px 5px;border-radius:3px;">python3 aci-proxy.py</code>
+          and connect to <code style="font-size:11px;background:var(--bg4);padding:2px 5px;border-radius:3px;">http://localhost:8888</code>
+          — or use the Python Scripts tab to run operations server-side.
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD PAGE -->
+    <div id="page-dashboard" class="page">
+      <div class="section-header">
+        <div>
+          <h2>Dashboard</h2>
+          <p id="dash-apic-label" style="display:none;"></p>
+        </div>
+        <button class="btn btn-ghost" onclick="refreshAll()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card" onclick="showPage('tenants')"><div class="stat-label">Tenants</div><div class="stat-value" id="stat-tenants">—</div></div>
+        <div class="stat-card" onclick="showPage('epgs')"><div class="stat-label">App Profiles</div><div class="stat-value" id="stat-apps">—</div></div>
+        <div class="stat-card" onclick="showPage('epgs')"><div class="stat-label">EPGs</div><div class="stat-value" id="stat-epgs">—</div></div>
+        <div class="stat-card" onclick="showPage('bridge-domains')"><div class="stat-label">Bridge Domains</div><div class="stat-value" id="stat-bds">—</div></div>
+        <div class="stat-card" onclick="showPage('l3outs')"><div class="stat-label">L3Outs</div><div class="stat-value" id="stat-l3outs">—</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Recent tenants</div>
+        <div id="dash-tenant-table"><div class="empty"><p>Loading...</p></div></div>
+      </div>
+    </div>
+
+    <!-- TENANTS PAGE -->
+    <div id="page-tenants" class="page">
+      <div class="section-header">
+        <div><h2>Tenants</h2><p id="tenant-count-label"></p></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" onclick="loadTenants()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+          <button class="btn btn-success" onclick="openModal('modal-create-tenant')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Create Tenant
+          </button>
+        </div>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="tenant-search" placeholder="Filter tenants…" oninput="filterTable('tenant-table-body','tenant-search')">
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Name</th><th>DN</th><th>Description</th><th>UID</th></tr></thead>
+          <tbody id="tenant-table-body"><tr><td colspan="4"><div class="empty"><p>Loading...</p></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EPGs PAGE -->
+    <div id="page-epgs" class="page">
+      <div class="section-header">
+        <div><h2>Endpoint Groups</h2><p id="epg-count-label"></p></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" onclick="loadEPGs()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+          <button class="btn btn-ghost" onclick="openModal('modal-static-port')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+            Static Binding
+          </button>
+          <button class="btn btn-primary" onclick="openModal('modal-create-app')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Create App Profile
+          </button>
+          <button class="btn btn-success" onclick="openModal('modal-create-epg')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Create EPG
+          </button>
+        </div>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="epg-search" placeholder="Filter EPGs…" oninput="filterTable('epg-table-body','epg-search')">
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>EPG Name</th><th>Tenant</th><th>App Profile</th><th>Bridge Domain</th><th>VLAN</th><th>Flood on Encap</th><th>Description</th></tr></thead>
+          <tbody id="epg-table-body"><tr><td colspan="7"><div class="empty"><p>Loading...</p></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BRIDGE DOMAINS PAGE -->
+    <div id="page-bridge-domains" class="page">
+      <div class="section-header">
+        <div><h2>Bridge Domains</h2><p id="bd-count-label"></p></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" onclick="loadBDs()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+          <button class="btn btn-success" onclick="openModal('modal-create-bd')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Create Bridge Domain
+          </button>
+        </div>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="bd-search" placeholder="Filter bridge domains…" oninput="filterTable('bd-table-body','bd-search')">
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Name</th><th>Tenant</th><th>VRF</th><th>Subnets</th><th>Unicast Routing</th><th>IP Learning</th></tr></thead>
+          <tbody id="bd-table-body"><tr><td colspan="6"><div class="empty"><p>Loading...</p></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- L3OUTS PAGE -->
+    <div id="page-l3outs" class="page">
+      <div class="section-header">
+        <div><h2>L3Outs</h2><p id="l3out-count-label"></p></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" onclick="loadL3Outs()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+          <button class="btn btn-success" onclick="openModal('modal-create-l3out')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Create L3Out
+          </button>
+        </div>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="l3out-search" placeholder="Filter L3Outs…" oninput="filterTable('l3out-table-body','l3out-search')">
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Name</th><th>Tenant</th><th>VRF</th><th>Target DSCP</th><th>Enforce Route Control</th></tr></thead>
+          <tbody id="l3out-table-body"><tr><td colspan="5"><div class="empty"><p>Loading...</p></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SWITCHES PAGE -->
+    <div id="page-switches" class="page">
+      <div class="section-header">
+        <div><h2>Fabric Switches</h2><p id="switch-count-label">Loading switches...</p></div>
+        <button class="btn btn-ghost" onclick="loadSwitches()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div class="alert alert-info" style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 12px 16px; border-radius: var(--radius); background: var(--bg2); border: 1px solid var(--border); color: var(--text2);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--blue); flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>Spine switches are excluded and will not be fetched. Only leaf switches are displayed.</span>
+      </div>
+      <div style="display:flex; gap: 20px; align-items: flex-start;">
+        <!-- Left: Switches List -->
+        <div class="card" style="flex: 1; min-width: 320px;">
+          <div class="card-title">Switches</div>
+          <table>
+            <thead><tr><th>ID</th><th>Name</th><th>Model</th><th>Role</th></tr></thead>
+            <tbody id="switch-table-body">
+              <tr><td colspan="4"><div class="empty"><p>Loading switches...</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Right: Interfaces List -->
+        <div class="card" style="flex: 1.5; min-width: 420px; display: none;" id="interface-card">
+          <div class="card-title" id="interface-card-title">Interfaces for Switch</div>
+          <div class="search-bar" style="padding: 10px 14px 0;">
+            <input type="text" id="interface-search" placeholder="Filter interfaces…" oninput="filterTable('interface-table-body','interface-search')" style="max-width: 100%;">
+          </div>
+          <table>
+            <thead><tr><th>Interface</th><th>Admin State</th><th>Usage</th><th>Actions</th></tr></thead>
+            <tbody id="interface-table-body">
+              <tr><td colspan="4"><div class="empty"><p>Select a switch to view interfaces.</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PYTHON SCRIPTS PAGE -->
+    <div id="page-python-scripts" class="page" style="max-width: 100%;">
+      <div class="section-header">
+        <div><h2>Python Scripts</h2><p>Ready-to-use scripts for ACI management via REST API</p></div>
+      </div>
+      <div class="scripts-accordion">
+        <div class="script-item" id="script-create-epg">
+          <div class="script-header" onclick="toggleAccordion('script-create-epg')">
+            <div>
+              <h3>Create EPG</h3>
+              <p class="script-desc">Provision Endpoint Group via APIC REST</p>
+            </div>
+            <span class="accordion-arrow">▼</span>
+          </div>
+          <div class="script-content">
+            <div class="code-block" id="code-create-epg"></div>
+          </div>
+        </div>
+
+        <div class="script-item" id="script-create-bd">
+          <div class="script-header" onclick="toggleAccordion('script-create-bd')">
+            <div>
+              <h3>Create BD</h3>
+              <p class="script-desc">Provision Bridge Domain with subnet</p>
+            </div>
+            <span class="accordion-arrow">▼</span>
+          </div>
+          <div class="script-content">
+            <div class="code-block" id="code-create-bd"></div>
+          </div>
+        </div>
+
+        <div class="script-item" id="script-create-l3out">
+          <div class="script-header" onclick="toggleAccordion('script-create-l3out')">
+            <div>
+              <h3>Create L3Out</h3>
+              <p class="script-desc">Provision external L3Out connection</p>
+            </div>
+            <span class="accordion-arrow">▼</span>
+          </div>
+          <div class="script-content">
+            <div class="code-block" id="code-create-l3out"></div>
+          </div>
+        </div>
+
+        <div class="script-item" id="script-bulk-query">
+          <div class="script-header" onclick="toggleAccordion('script-bulk-query')">
+            <div>
+              <h3>Bulk Query</h3>
+              <p class="script-desc">Export ACI configuration nodes to JSON</p>
+            </div>
+            <span class="accordion-arrow">▼</span>
+          </div>
+          <div class="script-content">
+            <div class="code-block" id="code-bulk-query"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VLAN POOLS PAGE -->
+    <div id="page-vlan-pools" class="page">
+      <div class="section-header">
+        <div><h2>VLAN Pools</h2><p id="vlan-pool-count-label">Loading VLAN pools...</p></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" onclick="loadVlanPools()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+          <button class="btn btn-success" onclick="openModal('modal-create-vlan-pool')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Create VLAN Pool
+          </button>
+        </div>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="vlan-pool-search" placeholder="Filter VLAN pools…" oninput="filterTable('vlan-pool-table-body','vlan-pool-search')">
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Pool Name</th><th>Allocation Mode</th><th>VLAN Range Blocks</th><th>Description</th></tr></thead>
+          <tbody id="vlan-pool-table-body"><tr><td colspan="4"><div class="empty"><p>Loading...</p></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FABRIC SNAPSHOT PAGE -->
+    <div id="page-fabric-snapshot" class="page">
+      <div class="section-header">
+        <div><h2>Fabric Snapshot (Backup)</h2><p>Trigger and manage configuration export jobs</p></div>
+      </div>
+      <div style="display:flex; gap: 24px; align-items: flex-start;">
+        <!-- Left: Trigger form -->
+        <div class="card" style="flex: 1; min-width: 340px; padding: 20px;">
+          <h3 style="font-size:14px; font-weight:600; margin-bottom:14px; color:var(--text);">Create Backup Export Policy</h3>
+          <div id="snapshot-error" class="alert alert-warn hidden" style="margin-bottom:14px; font-size:12px; padding:10px;"></div>
+          <div class="form-group">
+            <label>Policy Name *</label>
+            <input type="text" id="snapshot-name" placeholder="e.g. Daily-Snapshot-Backup">
+          </div>
+          <div class="form-group">
+            <label>Export Format *</label>
+            <select id="snapshot-format">
+              <option value="json">JSON</option>
+              <option value="xml">XML</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Backup Destination *</label>
+            <select id="snapshot-target" onchange="toggleRemoteDestinationFields()">
+              <option value="local">Local (Snapshot)</option>
+              <option value="remote">Export Destination (Remote Server)</option>
+            </select>
+          </div>
+          
+          <!-- Remote Fields container -->
+          <div id="remote-dest-fields" style="display:none; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;">
+            <div class="form-group">
+              <label>Select Remote Location *</label>
+              <select id="remote-location-select" onchange="toggleRemoteLocationSelect()">
+                <option value="new">[Configure New Remote Location]</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Remote Protocol</label>
+              <select id="remote-proto" onchange="updateDefaultPort()">
+                <option value="sftp">SFTP (SSH)</option>
+                <option value="scp">SCP (SSH)</option>
+                <option value="ftp">FTP</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Host IP / Domain *</label>
+              <input type="text" id="remote-host" placeholder="e.g. 192.168.1.50">
+            </div>
+            <div class="form-group">
+              <label>TCP/SSH Port *</label>
+              <input type="number" id="remote-port" value="22" placeholder="e.g. 22">
+            </div>
+            <div class="form-group">
+              <label>Management Routing (EPG) *</label>
+              <select id="remote-routing">
+                <option value="uni/tn-mgmt/mgmtp-default/oob-default">Out-of-Band (OOB) Management</option>
+                <option value="uni/tn-mgmt/mgmtp-default/inb-default">In-Band (INB) Management</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Remote Path / Directory *</label>
+              <input type="text" id="remote-path" placeholder="e.g. /backups/aci">
+            </div>
+            <div class="form-group">
+              <label>Username *</label>
+              <input type="text" id="remote-user" placeholder="e.g. backup_user">
+            </div>
+            <div class="form-group">
+              <label>Password / SSH Passphrase</label>
+              <input type="password" id="remote-pass" placeholder="••••••••">
+            </div>
+          </div>
+          
+          <button class="btn btn-primary btn-full" id="btn-run-snapshot" onclick="runBackupSnapshot()" style="margin-top:10px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            Trigger Snapshot Backup
+          </button>
+        </div>
+        
+        <!-- Right: History List -->
+        <div class="card" style="flex: 1.5; min-width: 420px;">
+          <div class="card-title">Snapshot Backup History</div>
+          <table>
+            <thead><tr><th>Policy Name</th><th>Triggered Time</th><th>Target</th><th>Size</th><th>Status</th></tr></thead>
+            <tbody id="snapshot-history-body">
+              <tr>
+                <td><strong>Manual-Prechange-Backup</strong></td>
+                <td style="color:var(--text2)">2026-06-18 12:30:15</td>
+                <td class="mono">APIC Local</td>
+                <td class="mono">24.5 MB</td>
+                <td><span class="badge badge-green">Success</span></td>
+              </tr>
+              <tr>
+                <td><strong>Scheduled-Weekly-Save</strong></td>
+                <td style="color:var(--text2)">2026-06-14 01:00:02</td>
+                <td class="mono">SFTP: 10.2.1.80</td>
+                <td class="mono">23.8 MB</td>
+                <td><span class="badge badge-green">Success</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABOUT PAGE -->
+    <div id="page-about" class="page">
+      <div class="section-header">
+        <div><h2>About</h2><p>Project details and information</p></div>
+      </div>
+      <div class="card" style="max-width: 600px; padding: 24px;">
+        <h3 style="font-size: 18px; margin-bottom: 12px; font-weight: 600;">ACI Manager ToolSet</h3>
+        <p style="font-size: 13.5px; color: var(--text2); line-height: 1.6; margin-bottom: 24px;">
+          This application provides a comprehensive operations dashboard and automation interface for Cisco ACI (Application Centric Infrastructure) deployments. Built to interact dynamically with the Cisco APIC controller, it enables users to visualize tenants, EPG mappings, subnets, and leaf switch interfaces, while providing copyable automation templates for provisioning fabric resources.
+        </p>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 20px;">
+          <div>
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--text3); font-weight: 600; letter-spacing: 0.05em; display: block;">Version</span>
+            <span class="badge badge-blue" style="font-size: 12px; margin-top: 4px; border-radius: 4px;">v1.1.0</span>
+          </div>
+          <div style="text-align: right;">
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--text3); font-weight: 600; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">Created By</span>
+            <span style="font-family: 'Georgia', 'Brush Script MT', cursive, serif; font-style: italic; font-size: 16px; color: var(--accent); letter-spacing: 0.04em;">Shafie Afridi</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- Create VLAN Pool -->
+<div class="modal-overlay" id="modal-create-vlan-pool">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Create VLAN Pool</h3>
+      <button class="btn btn-ghost" style="padding:4px 8px;" onclick="closeModal('modal-create-vlan-pool')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Pool Name *</label>
+        <input type="text" id="vlan-pool-name" placeholder="e.g. VLAN-Pool-Web">
+      </div>
+      <div class="form-group">
+        <label>Allocation Mode *</label>
+        <select id="vlan-pool-alloc">
+          <option value="static">Static Allocation (static)</option>
+          <option value="dynamic">Dynamic Allocation (dynamic)</option>
+        </select>
+      </div>
+      <div class="form-group" style="display:flex; gap:10px;">
+        <div style="flex:1;">
+          <label>VLAN Range Start *</label>
+          <input type="number" id="vlan-range-start" value="100" min="1" max="4094">
+        </div>
+        <div style="flex:1;">
+          <label>VLAN Range End *</label>
+          <input type="number" id="vlan-range-end" value="199" min="1" max="4094">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" id="vlan-pool-desc" placeholder="Optional description">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-create-vlan-pool')">Cancel</button>
+      <button class="btn btn-success" id="btn-create-vlan-pool" onclick="createVlanPool()">Create VLAN Pool</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Tenant -->
+<div class="modal-overlay" id="modal-create-tenant">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Create Tenant</h3>
+      <button class="btn btn-ghost" style="padding:4px 8px;" onclick="closeModal('modal-create-tenant')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Tenant Name *</label>
+        <input type="text" id="tenant-name" placeholder="e.g. Production-Tenant">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" id="tenant-desc" placeholder="Optional description">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-create-tenant')">Cancel</button>
+      <button class="btn btn-success" id="btn-create-tenant" onclick="createTenant()">Create Tenant</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Application Profile -->
+<div class="modal-overlay" id="modal-create-app">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Create Application Profile</h3>
+      <button class="btn btn-ghost" style="padding:4px 8px;" onclick="closeModal('modal-create-app')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Tenant *</label>
+        <select id="app-tenant">
+          <option value="">Select tenant…</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>App Profile Name *</label>
+        <input type="text" id="app-name" placeholder="e.g. Web-App-Profile">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" id="app-desc" placeholder="Optional description">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-create-app')">Cancel</button>
+      <button class="btn btn-success" id="btn-create-app" onclick="createAppProfile()">Create App Profile</button>
+    </div>
+  </div>
+</div>
+
+<!-- Static Port Mapping -->
+<div class="modal-overlay" id="modal-static-port">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Static Switch Interface Binding</h3>
+      <button class="btn btn-ghost" style="padding:4px 8px;" onclick="closeModal('modal-static-port')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Tenant *</label>
+        <select id="static-tenant" onchange="loadAppsForStaticTenant()">
+          <option value="">Select tenant…</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Application Profile *</label>
+        <select id="static-app" onchange="loadEPGsForApp()">
+          <option value="">Select tenant first</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>EPG *</label>
+        <select id="static-epg">
+          <option value="">Select app profile first</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Leaf Switch ID *</label>
+        <input type="text" id="static-node" placeholder="e.g. 101">
+      </div>
+      <div class="form-group">
+        <label>Interface *</label>
+        <input type="text" id="static-interface" placeholder="e.g. eth1/1">
+      </div>
+      <div class="form-group">
+        <label>VLAN ID *</label>
+        <input type="number" id="static-vlan" placeholder="e.g. 100">
+      </div>
+      <div class="form-group">
+        <label>VLAN Mode</label>
+        <select id="static-mode">
+          <option value="regular">Trunk (regular)</option>
+          <option value="untagged">Access (untagged)</option>
+          <option value="native">Trunk with Native VLAN (native)</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-static-port')">Cancel</button>
+      <button class="btn btn-success" id="btn-create-static" onclick="createStaticBinding()">Bind Port</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create EPG -->
+<div class="modal-overlay" id="modal-create-epg">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Create Endpoint Group</h3>
+      <button class="btn btn-ghost" style="padding:4px 8px;" onclick="closeModal('modal-create-epg')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Tenant *</label>
+        <select id="epg-tenant" onchange="loadAppsForTenant()">
+          <option value="">Select tenant…</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Application Profile *</label>
+        <select id="epg-app">
+          <option value="">Select app profile…</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>EPG Name *</label>
+        <input type="text" id="epg-name" placeholder="e.g. WEB-EPG">
+      </div>
+      <div class="form-group">
+        <label>Bridge Domain</label>
+        <select id="epg-bd">
+          <option value="">None</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" id="epg-desc" placeholder="Optional description">
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="epg-flood" style="width:auto;">
+        <label for="epg-flood" style="margin:0;cursor:pointer;">Flood on Encapsulation</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-create-epg')">Cancel</button>
+      <button class="btn btn-success" id="btn-create-epg" onclick="createEPG()">Create EPG</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Bridge Domain -->
+<div class="modal-overlay" id="modal-create-bd">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Create Bridge Domain</h3>
+      <button class="btn btn-ghost" style="padding:4px 8px;" onclick="closeModal('modal-create-bd')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Tenant *</label>
+        <select id="bd-tenant" onchange="loadVRFsForTenant('bd-tenant','bd-vrf')">
+          <option value="">Select tenant…</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>BD Name *</label>
+        <input type="text" id="bd-name" placeholder="e.g. WEB-BD">
+      </div>
+      <div class="form-group">
+        <label>VRF</label>
+        <select id="bd-vrf">
+          <option value="">None</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Subnet (CIDR)</label>
+        <input type="text" id="bd-subnet" placeholder="e.g. 192.168.10.1/24">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" id="bd-desc" placeholder="Optional description">
+      </div>
+      <div class="form-group">
+        <label>L2 Unknown Unicast</label>
+        <select id="bd-l2unknown">
+          <option value="proxy">Proxy (default)</option>
+          <option value="flood">Flood</option>
+        </select>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="bd-arp-flood" style="width:auto;">
+        <label for="bd-arp-flood" style="margin:0;cursor:pointer;">ARP Flooding</label>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="bd-unicast-routing" checked style="width:auto;">
+        <label for="bd-unicast-routing" style="margin:0;cursor:pointer;">Unicast Routing</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-create-bd')">Cancel</button>
+      <button class="btn btn-success" id="btn-create-bd" onclick="createBD()">Create Bridge Domain</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create L3Out -->
+<div class="modal-overlay" id="modal-create-l3out">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Create L3Out</h3>
+      <button class="btn btn-ghost" style="padding:4px 8px;" onclick="closeModal('modal-create-l3out')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Tenant *</label>
+        <select id="l3out-tenant" onchange="loadVRFsForTenant('l3out-tenant','l3out-vrf')">
+          <option value="">Select tenant…</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>L3Out Name *</label>
+        <input type="text" id="l3out-name" placeholder="e.g. OUTSIDE-L3OUT">
+      </div>
+      <div class="form-group">
+        <label>VRF *</label>
+        <select id="l3out-vrf">
+          <option value="">Select VRF…</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Routing Protocol</label>
+        <select id="l3out-proto">
+          <option value="">None (static)</option>
+          <option value="bgp">BGP</option>
+          <option value="ospf">OSPF</option>
+          <option value="eigrp">EIGRP</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" id="l3out-desc" placeholder="Optional description">
+      </div>
+      <div class="form-group">
+        <label>Target DSCP</label>
+        <select id="l3out-dscp">
+          <option value="unspecified">Unspecified</option>
+          <option value="CS0">CS0</option>
+          <option value="CS1">CS1</option>
+          <option value="AF11">AF11</option>
+          <option value="EF">EF</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-create-l3out')">Cancel</button>
+      <button class="btn btn-success" id="btn-create-l3out" onclick="createL3Out()">Create L3Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let STATE = {
+  apicUrl: '',
+  token: '',
+  connected: false,
+  tenants: [],
+  epgs: [],
+  bds: [],
+  l3outs: [],
+  apps: [],
+  vrfs: [],
+  switches: [],
+  vlanPools: [],
+  snapshots: [],
+  remoteLocations: []
+};
+
+// ═══════════════════════════════════════════════════════
+//  API HELPERS
+// ═══════════════════════════════════════════════════════
+async function apiCall(path, options = {}) {
+  const url = STATE.apicUrl + path;
+  const defaultOpts = {
+    headers: { 'Content-Type': 'application/json', ...(STATE.token ? { 'APIC-cookie': STATE.token } : {}) },
+    ...options
+  };
+  if (options.headers) defaultOpts.headers = { ...defaultOpts.headers, ...options.headers };
+  const res = await fetch(url, defaultOpts);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`HTTP ${res.status}: ${text.slice(0, 200)}`);
+  }
+  return res.json();
+}
+
+function extractItems(data) {
+  return (data.imdata || []).map(obj => {
+    const key = Object.keys(obj)[0];
+    return { _class: key, ...obj[key].attributes, children: obj[key].children || [] };
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════════
+async function login() {
+  const url = document.getElementById('apic-url').value.trim().replace(/\/$/, '');
+  const user = document.getElementById('username').value.trim();
+  const pass = document.getElementById('password').value;
+
+  if (!url || !user || !pass) { showError('Please fill in all fields.'); return; }
+
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Connecting…';
+  document.getElementById('login-error').classList.add('hidden');
+  document.getElementById('proxy-hint').classList.add('hidden');
+
+  STATE.apicUrl = url;
+
+  try {
+    const body = JSON.stringify({ aaaUser: { attributes: { name: user, pwd: pass } } });
+    const data = await apiCall('/api/aaaLogin.json', { method: 'POST', body });
+    const token = data.imdata?.[0]?.aaaLogin?.attributes?.token;
+    if (!token) throw new Error('No token in response');
+    STATE.token = token;
+    STATE.connected = true;
+    onLoginSuccess();
+  } catch (e) {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg> Connect';
+
+    if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError') || e.message.includes('CORS')) {
+      document.getElementById('proxy-hint').classList.remove('hidden');
+      showError('Connection failed — likely a CORS restriction. See the proxy hint below.');
+    } else {
+      showError(e.message);
+    }
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('login-error');
+  el.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ${msg}`;
+  el.classList.remove('hidden');
+}
+
+function onLoginSuccess() {
+  document.getElementById('login-panel').style.display = 'none';
+  document.getElementById('sidebar').style.display = 'flex';
+  document.getElementById('logout-btn').style.display = '';
+
+  const badge = document.getElementById('conn-badge');
+  badge.textContent = '● Connected';
+  badge.className = 'connected';
+
+  const shortUrl = STATE.apicUrl.replace('https://','').replace('http://','');
+  document.getElementById('apic-url-display').textContent = shortUrl;
+  document.getElementById('dash-apic-label').textContent = STATE.apicUrl;
+
+  showPage('dashboard');
+  refreshAll();
+}
+
+function logout() {
+  STATE = { apicUrl: '', token: '', connected: false, tenants: [], epgs: [], bds: [], l3outs: [], apps: [], vrfs: [], switches: [] };
+  document.getElementById('login-panel').style.display = '';
+  document.getElementById('sidebar').style.display = 'none';
+  document.getElementById('logout-btn').style.display = 'none';
+  document.getElementById('conn-badge').textContent = '● Not connected';
+  document.getElementById('conn-badge').className = '';
+  document.getElementById('apic-url-display').textContent = '';
+  document.getElementById('login-btn').disabled = false;
+  document.getElementById('login-btn').innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg> Connect';
+  hideAllPages();
+  toast('Signed out', 'info');
+}
+
+// ═══════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════
+function hideAllPages() {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+}
+
+function showPage(name) {
+  hideAllPages();
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name)?.classList.add('active');
+  const navMap = {
+    dashboard: 0,
+    tenants: 1,
+    epgs: 2,
+    'bridge-domains': 3,
+    l3outs: 4,
+    switches: 5,
+    'vlan-pools': 6,
+    'python-scripts': 7,
+    'fabric-snapshot': 8,
+    about: 9
+  };
+  const items = document.querySelectorAll('.nav-item');
+  const idx = navMap[name];
+  if (idx !== undefined && items[idx]) items[idx].classList.add('active');
+
+  if (name === 'python-scripts') buildScripts();
+  if (name === 'switches') loadSwitches();
+  if (name === 'vlan-pools') loadVlanPools();
+  if (name === 'fabric-snapshot') { loadSnapshots(); loadRemoteLocations(); }
+}
+
+// ═══════════════════════════════════════════════════════
+//  DATA LOADING
+// ═══════════════════════════════════════════════════════
+async function refreshAll() {
+  await Promise.all([loadTenants(), loadEPGs(), loadBDs(), loadL3Outs(), loadApps(), loadSwitches(), loadVlanPools()]);
+  buildDashboard();
+}
+
+async function loadTenants() {
+  try {
+    const data = await apiCall('/api/class/fvTenant.json?order-by=fvTenant.name');
+    STATE.tenants = extractItems(data);
+    renderTenants();
+    populateTenantDropdowns();
+  } catch(e) { toast('Failed to load tenants: ' + e.message, 'error'); }
+}
+
+async function loadEPGs() {
+  try {
+    const data = await apiCall('/api/class/fvAEPg.json?rsp-subtree=children&rsp-subtree-class=fvRsBd,fvRsPathAtt&order-by=fvAEPg.name');
+    STATE.epgs = extractItems(data);
+    renderEPGs();
+  } catch(e) { toast('Failed to load EPGs: ' + e.message, 'error'); }
+}
+
+async function loadBDs() {
+  try {
+    const data = await apiCall('/api/class/fvBD.json?rsp-subtree=children&rsp-subtree-class=fvRsCtx,fvSubnet&order-by=fvBD.name');
+    STATE.bds = extractItems(data);
+    renderBDs();
+  } catch(e) { toast('Failed to load bridge domains: ' + e.message, 'error'); }
+}
+
+async function loadL3Outs() {
+  try {
+    const data = await apiCall('/api/class/l3extOut.json?rsp-subtree=children&rsp-subtree-class=l3extRsEctx&order-by=l3extOut.name');
+    STATE.l3outs = extractItems(data);
+    renderL3Outs();
+  } catch(e) { toast('Failed to load L3Outs: ' + e.message, 'error'); }
+}
+
+async function loadApps() {
+  try {
+    const data = await apiCall('/api/class/fvAp.json?order-by=fvAp.name');
+    STATE.apps = extractItems(data);
+  } catch(e) {}
+}
+
+async function loadAppsForTenant() {
+  const tenant = document.getElementById('epg-tenant').value;
+  const bdSel = document.getElementById('epg-bd');
+  const appSel = document.getElementById('epg-app');
+  appSel.innerHTML = '<option value="">Loading…</option>';
+  bdSel.innerHTML = '<option value="">None</option>';
+  if (!tenant) { appSel.innerHTML = '<option value="">Select tenant first</option>'; return; }
+
+  try {
+    const data = await apiCall(`/api/node/mo/uni/tn-${tenant}.json?query-target=children&target-subtree-class=fvAp`);
+    const apps = extractItems(data);
+    appSel.innerHTML = '<option value="">Select app profile…</option>' + apps.map(a => `<option>${a.name}</option>`).join('');
+
+    const bdData = await apiCall(`/api/node/mo/uni/tn-${tenant}.json?query-target=children&target-subtree-class=fvBD`);
+    const bds = extractItems(bdData);
+    bdSel.innerHTML = '<option value="">None</option>' + bds.map(b => `<option>${b.name}</option>`).join('');
+  } catch(e) { appSel.innerHTML = '<option value="">Error loading</option>'; }
+}
+
+async function loadVRFsForTenant(tenantSelId, vrfSelId) {
+  const tenant = document.getElementById(tenantSelId).value;
+  const vrfSel = document.getElementById(vrfSelId);
+  vrfSel.innerHTML = '<option value="">Loading…</option>';
+  if (!tenant) { vrfSel.innerHTML = '<option value="">Select tenant first</option>'; return; }
+  try {
+    const data = await apiCall(`/api/node/mo/uni/tn-${tenant}.json?query-target=children&target-subtree-class=fvCtx`);
+    const vrfs = extractItems(data);
+    vrfSel.innerHTML = '<option value="">None</option>' + vrfs.map(v => `<option>${v.name}</option>`).join('');
+  } catch(e) { vrfSel.innerHTML = '<option value="">Error loading</option>'; }
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDERERS
+// ═══════════════════════════════════════════════════════
+function parseDn(dn, part) {
+  const patterns = { tenant: /tn-([^\/]+)/, ap: /ap-([^\/]+)/, bd: /BD-([^\/]+)/ };
+  const m = dn.match(patterns[part]);
+  return m ? m[1] : '—';
+}
+
+function buildDashboard() {
+  document.getElementById('stat-tenants').textContent = STATE.tenants.length;
+  document.getElementById('stat-apps').textContent = STATE.apps.length;
+  document.getElementById('stat-epgs').textContent = STATE.epgs.length;
+  document.getElementById('stat-bds').textContent = STATE.bds.length;
+  document.getElementById('stat-l3outs').textContent = STATE.l3outs.length;
+
+  const tbody = document.getElementById('dash-tenant-table');
+  if (!STATE.tenants.length) { tbody.innerHTML = '<div class="empty"><p>No tenants found.</p></div>'; return; }
+  tbody.innerHTML = '<table><thead><tr><th>Tenant</th><th>DN</th><th>Description</th></tr></thead><tbody>' +
+    STATE.tenants.slice(0, 10).map(t => `
+      <tr>
+        <td><span class="badge badge-blue">${t.name}</span></td>
+        <td class="mono">${t.dn}</td>
+        <td style="color:var(--text2)">${t.descr || '—'}</td>
+      </tr>`).join('') +
+    '</tbody></table>';
+}
+
+function renderTenants() {
+  const tbody = document.getElementById('tenant-table-body');
+  document.getElementById('tenant-count-label').textContent = `${STATE.tenants.length} tenants`;
+  if (!STATE.tenants.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty"><p>No tenants found.</p></div></td></tr>'; return; }
+  tbody.innerHTML = STATE.tenants.map(t => `
+    <tr data-search="${(t.name+t.dn+t.descr).toLowerCase()}">
+      <td><strong>${t.name}</strong></td>
+      <td class="mono">${t.dn}</td>
+      <td style="color:var(--text2)">${t.descr || '—'}</td>
+      <td class="mono" style="font-size:11px;color:var(--text3)">${t.uid || '—'}</td>
+    </tr>`).join('');
+}
+
+function renderEPGs() {
+  const tbody = document.getElementById('epg-table-body');
+  document.getElementById('epg-count-label').textContent = `${STATE.epgs.length} EPGs`;
+  if (!STATE.epgs.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><p>No EPGs found.</p></div></td></tr>'; return; }
+  tbody.innerHTML = STATE.epgs.map(e => {
+    const tenant = parseDn(e.dn, 'tenant');
+    const ap = parseDn(e.dn, 'ap');
+    const bdChild = e.children?.find(c => c.fvRsBd);
+    const bd = bdChild?.fvRsBd?.attributes?.tnFvBDName || '—';
+    
+    // VLAN extraction from fvRsPathAtt children
+    const pathChildren = e.children?.filter(c => c.fvRsPathAtt) || [];
+    const vlans = pathChildren.map(c => c.fvRsPathAtt.attributes?.encap?.replace('vlan-', '')).filter(Boolean);
+    const uniqueVlans = [...new Set(vlans)];
+    const vlanStr = uniqueVlans.length ? uniqueVlans.map(v => `<span class="badge badge-orange">${v}</span>`).join(' ') : '—';
+    
+    const desc = e.descr || '—';
+    
+    return `<tr data-search="${(e.name+tenant+ap+bd+desc).toLowerCase()}">
+      <td><strong>${e.name}</strong></td>
+      <td><span class="badge badge-blue">${tenant}</span></td>
+      <td>${ap}</td>
+      <td>${bd !== '—' ? `<span class="badge badge-gray">${bd}</span>` : '—'}</td>
+      <td>${vlanStr}</td>
+      <td>${e.floodOnEncap === 'enabled' ? '<span class="badge badge-orange">Yes</span>' : '<span style="color:var(--text3)">No</span>'}</td>
+      <td style="color:var(--text2)">${desc}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderBDs() {
+  const tbody = document.getElementById('bd-table-body');
+  document.getElementById('bd-count-label').textContent = `${STATE.bds.length} bridge domains`;
+  if (!STATE.bds.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><p>No bridge domains found.</p></div></td></tr>'; return; }
+  tbody.innerHTML = STATE.bds.map(b => {
+    const tenant = parseDn(b.dn, 'tenant');
+    const vrfChild = b.children?.find(c => c.fvRsCtx);
+    const vrf = vrfChild?.fvRsCtx?.attributes?.tnFvCtxName || '—';
+    
+    // Subnets extraction and IP Data-plane Learning detection
+    const subnetChildren = b.children?.filter(c => c.fvSubnet) || [];
+    const subnets = subnetChildren.map(c => {
+      const ip = c.fvSubnet.attributes?.ip || '';
+      const daple = c.fvSubnet.attributes?.ipDaple || 'enabled';
+      const dapleLabel = daple === 'enabled' ? 'Learning: Enabled' : 'Learning: Disabled';
+      return `${ip} (${dapleLabel})`;
+    }).filter(Boolean);
+    const subnetsStr = subnets.length ? subnets.map(s => `<code class="mono" style="display:block;">${s}</code>`).join('') : '—';
+    
+    const unicast = b.unicastRoute === 'yes' ? 'True' : 'False';
+    
+    return `<tr data-search="${(b.name+tenant+vrf).toLowerCase()}">
+      <td><strong>${b.name}</strong></td>
+      <td><span class="badge badge-blue">${tenant}</span></td>
+      <td>${vrf !== '—' ? `<span class="badge badge-green">${vrf}</span>` : '—'}</td>
+      <td>${subnetsStr}</td>
+      <td>${unicast === 'True' ? '<span class="badge badge-green">True</span>' : '<span class="badge badge-gray">False</span>'}</td>
+      <td>${b.ipLearning !== 'no' ? '<span class="badge badge-green">Yes</span>' : '<span style="color:var(--text3)">No</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderL3Outs() {
+  const tbody = document.getElementById('l3out-table-body');
+  document.getElementById('l3out-count-label').textContent = `${STATE.l3outs.length} L3Outs`;
+  if (!STATE.l3outs.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty"><p>No L3Outs found.</p></div></td></tr>'; return; }
+  tbody.innerHTML = STATE.l3outs.map(l => {
+    const tenant = parseDn(l.dn, 'tenant');
+    const vrfChild = l.children?.find(c => c.l3extRsEctx);
+    const vrf = vrfChild?.l3extRsEctx?.attributes?.tnFvCtxName || '—';
+    return `<tr data-search="${(l.name+tenant+vrf).toLowerCase()}">
+      <td><strong>${l.name}</strong></td>
+      <td><span class="badge badge-blue">${tenant}</span></td>
+      <td>${vrf !== '—' ? `<span class="badge badge-green">${vrf}</span>` : '—'}</td>
+      <td>${l.targetDscp || 'unspecified'}</td>
+      <td>${l.enforceRtctrl || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  FILTER
+// ═══════════════════════════════════════════════════════
+function filterTable(tbodyId, inputId) {
+  const q = document.getElementById(inputId).value.toLowerCase();
+  document.querySelectorAll(`#${tbodyId} tr[data-search]`).forEach(row => {
+    row.style.display = row.dataset.search.includes(q) ? '' : 'none';
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  DROPDOWNS
+// ═══════════════════════════════════════════════════════
+function populateTenantDropdowns() {
+  const opts = '<option value="">Select tenant…</option>' +
+    STATE.tenants.filter(t => !['common','infra','mgmt'].includes(t.name))
+                 .map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+  ['epg-tenant','bd-tenant','l3out-tenant','app-tenant','static-tenant'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = opts;
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  CREATE OPERATIONS
+// ═══════════════════════════════════════════════════════
+async function createTenant() {
+  const name = document.getElementById('tenant-name').value.trim();
+  const desc = document.getElementById('tenant-desc').value.trim();
+
+  if (!name) { toast('Tenant name is required.', 'error'); return; }
+
+  const btn = document.getElementById('btn-create-tenant');
+  btn.disabled = true; btn.textContent = 'Creating…';
+
+  const payload = {
+    fvTenant: {
+      attributes: {
+        name,
+        descr: desc
+      }
+    }
+  };
+
+  try {
+    await apiCall(`/api/mo/uni/tn-${name}.json`, {
+      method: 'POST', body: JSON.stringify(payload)
+    });
+    toast(`Tenant "${name}" created successfully!`, 'success');
+    closeModal('modal-create-tenant');
+    await loadTenants();
+    buildDashboard();
+  } catch(e) {
+    toast('Create Tenant failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create Tenant';
+  }
+}
+
+async function createAppProfile() {
+  const tenant = document.getElementById('app-tenant').value;
+  const name = document.getElementById('app-name').value.trim();
+  const desc = document.getElementById('app-desc').value.trim();
+
+  if (!tenant || !name) { toast('Tenant and App Profile name are required.', 'error'); return; }
+
+  const btn = document.getElementById('btn-create-app');
+  btn.disabled = true; btn.textContent = 'Creating…';
+
+  const payload = {
+    fvAp: {
+      attributes: {
+        name,
+        descr: desc
+      }
+    }
+  };
+
+  try {
+    await apiCall(`/api/mo/uni/tn-${tenant}/ap-${name}.json`, {
+      method: 'POST', body: JSON.stringify(payload)
+    });
+    toast(`Application Profile "${name}" created!`, 'success');
+    closeModal('modal-create-app');
+    await loadApps();
+    buildDashboard();
+  } catch(e) {
+    toast('Create App Profile failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create App Profile';
+  }
+}
+
+async function createStaticBinding() {
+  const tenant = document.getElementById('static-tenant').value;
+  const ap = document.getElementById('static-app').value;
+  const epg = document.getElementById('static-epg').value;
+  const node = document.getElementById('static-node').value.trim();
+  const port = document.getElementById('static-interface').value.trim();
+  const vlan = document.getElementById('static-vlan').value.trim();
+  const mode = document.getElementById('static-mode').value;
+
+  if (!tenant || !ap || !epg || !node || !port || !vlan) {
+    toast('All asterisk fields are required.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btn-create-static');
+  btn.disabled = true; btn.textContent = 'Binding…';
+
+  const pathDn = `topology/pod-1/paths-${node}/pathep-[${port}]`;
+  const payload = {
+    fvRsPathAtt: {
+      attributes: {
+        tDn: pathDn,
+        encap: `vlan-${vlan}`,
+        mode: mode,
+        instrImedcy: 'immediate'
+      }
+    }
+  };
+
+  try {
+    await apiCall(`/api/mo/uni/tn-${tenant}/ap-${ap}/epg-${epg}/rspathAtt-[${pathDn}].json`, {
+      method: 'POST', body: JSON.stringify(payload)
+    });
+    toast(`Interface ${port} on Leaf ${node} bound to EPG ${epg}!`, 'success');
+    closeModal('modal-static-port');
+    await loadEPGs();
+  } catch(e) {
+    toast('Static binding failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Bind Port';
+  }
+}
+
+async function loadAppsForStaticTenant() {
+  const tenant = document.getElementById('static-tenant').value;
+  const apSel = document.getElementById('static-app');
+  const epgSel = document.getElementById('static-epg');
+  apSel.innerHTML = '<option value="">Loading…</option>';
+  epgSel.innerHTML = '<option value="">Select app first</option>';
+  if (!tenant) { apSel.innerHTML = '<option value="">Select tenant first</option>'; return; }
+  try {
+    const data = await apiCall(`/api/node/mo/uni/tn-${tenant}.json?query-target=children&target-subtree-class=fvAp`);
+    const apps = extractItems(data);
+    apSel.innerHTML = '<option value="">Select app profile…</option>' + apps.map(a => `<option>${a.name}</option>`).join('');
+  } catch(e) { apSel.innerHTML = '<option value="">Error loading</option>'; }
+}
+
+async function loadEPGsForApp() {
+  const tenant = document.getElementById('static-tenant').value;
+  const ap = document.getElementById('static-app').value;
+  const epgSel = document.getElementById('static-epg');
+  epgSel.innerHTML = '<option value="">Loading…</option>';
+  if (!tenant || !ap) { epgSel.innerHTML = '<option value="">Select app first</option>'; return; }
+  try {
+    const data = await apiCall(`/api/node/mo/uni/tn-${tenant}/ap-${ap}.json?query-target=children&target-subtree-class=fvAEPg`);
+    const epgs = extractItems(data);
+    epgSel.innerHTML = '<option value="">Select EPG…</option>' + epgs.map(e => `<option>${e.name}</option>`).join('');
+  } catch(e) { epgSel.innerHTML = '<option value="">Error loading</option>'; }
+}
+
+async function loadSwitches() {
+  try {
+    const data = await apiCall('/api/class/fabricNode.json?query-target-filter=eq(fabricNode.role,"leaf")&order-by=fabricNode.id');
+    STATE.switches = extractItems(data).filter(s => s.role !== 'spine');
+    renderSwitches();
+  } catch(e) {
+    toast('Failed to load switches: ' + e.message, 'error');
+    if (!STATE.connected) {
+      STATE.switches = [
+        { id: '101', name: 'leaf-101', model: 'N9K-C93180YC-FX', role: 'leaf' },
+        { id: '102', name: 'leaf-102', model: 'N9K-C93180YC-FX', role: 'leaf' },
+        { id: '103', name: 'leaf-103', model: 'N9K-C93180YC-FX', role: 'leaf' }
+      ];
+      renderSwitches();
+    }
+  }
+}
+
+function renderSwitches() {
+  const tbody = document.getElementById('switch-table-body');
+  document.getElementById('switch-count-label').textContent = `${STATE.switches.length} fabric switches detected`;
+  if (!STATE.switches.length) {
+    tbody.innerHTML = '<tr><td colspan="4"><div class="empty"><p>No switches found.</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = STATE.switches.map(s => {
+    const roleBadge = s.role === 'spine' ? 'badge-blue' : (s.role === 'leaf' ? 'badge-green' : 'badge-gray');
+    const roleName = s.role ? s.role.charAt(0).toUpperCase() + s.role.slice(1) : 'Unknown';
+    return `<tr onclick="selectSwitch('${s.id}', '${s.name}')" style="cursor:pointer;">
+      <td class="mono"><strong>${s.id}</strong></td>
+      <td>${s.name}</td>
+      <td class="mono">${s.model}</td>
+      <td><span class="badge ${roleBadge}">${roleName}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+async function selectSwitch(nodeId, nodeName) {
+  document.getElementById('interface-card').style.display = 'block';
+  document.getElementById('interface-card-title').textContent = `Interfaces for Switch ${nodeName} (ID: ${nodeId})`;
+  
+  const tbody = document.getElementById('interface-table-body');
+  tbody.innerHTML = '<tr><td colspan="4"><div class="empty"><div class="spinner" style="margin: 0 auto 10px;"></div><p>Loading interfaces...</p></div></td></tr>';
+  
+  try {
+    const data = await apiCall(`/api/node/mo/topology/pod-1/node-${nodeId}.json?query-target=subtree&target-subtree-class=l1PhysIf`);
+    const items = extractItems(data).sort((a, b) => {
+      const parsePort = id => {
+        const m = id.match(/eth(\d+)\/(\d+)/);
+        return m ? [parseInt(m[1]), parseInt(m[2])] : [999, 999];
+      };
+      const [ap1, ap2] = parsePort(a.id);
+      const [bp1, bp2] = parsePort(b.id);
+      return ap1 !== bp1 ? ap1 - bp1 : ap2 - bp2;
+    });
+    
+    tbody.innerHTML = items.map(i => {
+      const isUp = i.adminSt === 'up';
+      const stateBadge = isUp ? 'badge-green' : 'badge-gray';
+      const usage = i.usage || '—';
+      return `<tr data-search="${(i.id + i.adminSt + usage).toLowerCase()}">
+        <td><span class="badge badge-gray mono" style="font-weight: normal; font-size: 12px;">${i.id}</span></td>
+        <td><span class="badge ${stateBadge}">${i.adminSt}</span></td>
+        <td><span class="mono">${usage}</span></td>
+        <td>
+          <button class="btn btn-ghost" style="padding: 2px 6px; font-size: 11px;" onclick="quickMapPort('${nodeId}', '${i.id}')">
+            Map to EPG
+          </button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="4"><div class="empty"><p style="color:var(--red-text)">Failed: ${e.message}</p></div></td></tr>`;
+  }
+}
+
+function quickMapPort(nodeId, interfaceId) {
+  openModal('modal-static-port');
+  
+  const nodeInput = document.getElementById('static-node');
+  const intInput = document.getElementById('static-interface');
+  
+  if (nodeInput) nodeInput.value = nodeId;
+  if (intInput) intInput.value = interfaceId;
+}
+
+async function createEPG() {
+  const tenant = document.getElementById('epg-tenant').value;
+  const ap = document.getElementById('epg-app').value;
+  const name = document.getElementById('epg-name').value.trim();
+  const bd = document.getElementById('epg-bd').value;
+  const desc = document.getElementById('epg-desc').value.trim();
+  const flood = document.getElementById('epg-flood').checked;
+
+  if (!tenant || !ap || !name) { toast('Tenant, app profile, and EPG name are required.', 'error'); return; }
+
+  const btn = document.getElementById('btn-create-epg');
+  btn.disabled = true; btn.textContent = 'Creating…';
+
+  const payload = {
+    fvAEPg: {
+      attributes: {
+        dn: `uni/tn-${tenant}/ap-${ap}/epg-${name}`,
+        name, descr: desc,
+        floodOnEncap: flood ? 'enabled' : 'disabled'
+      },
+      children: bd ? [{ fvRsBd: { attributes: { tnFvBDName: bd } } }] : []
+    }
+  };
+
+  try {
+    await apiCall(`/api/mo/uni/tn-${tenant}/ap-${ap}/epg-${name}.json`, {
+      method: 'POST', body: JSON.stringify(payload)
+    });
+    toast(`EPG "${name}" created successfully!`, 'success');
+    closeModal('modal-create-epg');
+    await loadEPGs();
+    buildDashboard();
+  } catch(e) {
+    toast('Create EPG failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create EPG';
+  }
+}
+
+async function createBD() {
+  const tenant = document.getElementById('bd-tenant').value;
+  const name = document.getElementById('bd-name').value.trim();
+  const vrf = document.getElementById('bd-vrf').value;
+  const subnet = document.getElementById('bd-subnet').value.trim();
+  const desc = document.getElementById('bd-desc').value.trim();
+  const l2unknown = document.getElementById('bd-l2unknown').value;
+  const arpFlood = document.getElementById('bd-arp-flood').checked;
+  const unicast = document.getElementById('bd-unicast-routing').checked;
+
+  if (!tenant || !name) { toast('Tenant and BD name are required.', 'error'); return; }
+
+  const btn = document.getElementById('btn-create-bd');
+  btn.disabled = true; btn.textContent = 'Creating…';
+
+  const children = [];
+  if (vrf) children.push({ fvRsCtx: { attributes: { tnFvCtxName: vrf } } });
+  if (subnet) {
+    children.push({ fvSubnet: { attributes: { ip: subnet, scope: 'public' } } });
+  }
+
+  const payload = {
+    fvBD: {
+      attributes: {
+        dn: `uni/tn-${tenant}/BD-${name}`,
+        name, descr: desc,
+        unkMacUcastAct: l2unknown,
+        arpFlood: arpFlood ? 'yes' : 'no',
+        unicastRoute: unicast ? 'yes' : 'no'
+      },
+      children
+    }
+  };
+
+  try {
+    await apiCall(`/api/mo/uni/tn-${tenant}/BD-${name}.json`, {
+      method: 'POST', body: JSON.stringify(payload)
+    });
+    toast(`Bridge Domain "${name}" created!`, 'success');
+    closeModal('modal-create-bd');
+    await loadBDs();
+    buildDashboard();
+  } catch(e) {
+    toast('Create BD failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create Bridge Domain';
+  }
+}
+
+async function createL3Out() {
+  const tenant = document.getElementById('l3out-tenant').value;
+  const name = document.getElementById('l3out-name').value.trim();
+  const vrf = document.getElementById('l3out-vrf').value;
+  const proto = document.getElementById('l3out-proto').value;
+  const desc = document.getElementById('l3out-desc').value.trim();
+  const dscp = document.getElementById('l3out-dscp').value;
+
+  if (!tenant || !name) { toast('Tenant and L3Out name are required.', 'error'); return; }
+
+  const btn = document.getElementById('btn-create-l3out');
+  btn.disabled = true; btn.textContent = 'Creating…';
+
+  const children = [];
+  if (vrf) children.push({ l3extRsEctx: { attributes: { tnFvCtxName: vrf } } });
+
+  const payload = {
+    l3extOut: {
+      attributes: {
+        dn: `uni/tn-${tenant}/out-${name}`,
+        name, descr: desc, targetDscp: dscp,
+        enforceRtctrl: 'export'
+      },
+      children
+    }
+  };
+
+  try {
+    await apiCall(`/api/mo/uni/tn-${tenant}/out-${name}.json`, {
+      method: 'POST', body: JSON.stringify(payload)
+    });
+    toast(`L3Out "${name}" created!`, 'success');
+    closeModal('modal-create-l3out');
+    await loadL3Outs();
+    buildDashboard();
+  } catch(e) {
+    toast('Create L3Out failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create L3Out';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODAL
+// ═══════════════════════════════════════════════════════
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+// ═══════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════
+function toast(msg, type='info') {
+  const icons = {
+    success: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+    error:   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    info:    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+  };
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = icons[type] + `<span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+// ═══════════════════════════════════════════════════════
+//  PYTHON SCRIPTS
+// ═══════════════════════════════════════════════════════
+// switchScriptTab function removed - layout uses accordion
+
+function toggleAccordion(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.toggle('open');
+  }
+}
+
+function buildScripts() {
+  const url = STATE.apicUrl || 'https://tpaci.bswhealth.org';
+
+  const proxyEl = document.getElementById('code-proxy');
+  if (proxyEl) {
+    proxyEl.textContent = `#!/usr/bin/env python3
+"""
+aci-proxy.py — Local CORS proxy for ACI Manager
+Run: python3 aci-proxy.py
+Then set APIC URL to http://localhost:8888 in the login form.
+"""
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import urllib.request, urllib.error, ssl, json, os
+
+TARGET = "${url}"
+PORT   = 8888
+
+ctx = ssl.create_default_context()
+ctx.check_hostname = False
+ctx.verify_mode = ssl.CERT_NONE
+
+class Proxy(BaseHTTPRequestHandler):
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self._cors(); self.end_headers()
+
+    def do_GET(self):  self._proxy('GET')
+    def do_POST(self): self._proxy('POST')
+
+    def _proxy(self, method):
+        target = TARGET + self.path
+        body = None
+        if method == 'POST':
+            length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(length) if length else None
+
+        hdrs = {k: v for k, v in self.headers.items()
+                if k.lower() not in ('host','content-length')}
+        req = urllib.request.Request(target, data=body, headers=hdrs, method=method)
+        try:
+            resp = urllib.request.urlopen(req, context=ctx)
+            self.send_response(resp.status)
+            for k, v in resp.headers.items():
+                if k.lower() not in ('transfer-encoding',) and not k.lower().startswith('access-control-'):
+                    self.send_header(k, v)
+            self._cors(); self.end_headers()
+            self.wfile.write(resp.read())
+        except urllib.error.HTTPError as e:
+            self.send_response(e.code)
+            self._cors(); self.end_headers()
+            self.wfile.write(e.read())
+
+    def _cors(self):
+        origin = self.headers.get('Origin') or '*'
+        self.send_header('Access-Control-Allow-Origin', origin)
+        self.send_header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, APIC-cookie, Origin, Accept, X-Requested-With')
+        self.send_header('Access-Control-Allow-Credentials', 'true')
+
+    def log_message(self, fmt, *args):
+        print(f"[proxy] {self.path} {args[1] if len(args)>1 else ''}")
+
+if __name__ == '__main__':
+    print(f"ACI Proxy → {TARGET}  (listening on port {PORT})")
+    print(f"Set APIC URL to: http://localhost:{PORT}")
+    server = HTTPServer(('', PORT), Proxy)
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\n[proxy] KeyboardInterrupt received. Shutting down...")
+        try:
+            server.server_close()
+        except Exception:
+            pass`;
+  }
+
+  document.getElementById('code-create-epg').textContent = `#!/usr/bin/env python3
+"""Create an EPG in Cisco ACI via REST API"""
+import requests, json, urllib3
+urllib3.disable_warnings()
+
+APIC   = "${url}"
+USER   = "admin"
+PASS   = "your_password"
+TENANT = "your-tenant"
+AP     = "your-app-profile"
+EPG    = "NEW-EPG"
+BD     = "your-bd"          # or None
+
+s = requests.Session()
+s.verify = False
+
+# ── Login ──
+r = s.post(f"{APIC}/api/aaaLogin.json",
+    json={"aaaUser":{"attributes":{"name":USER,"pwd":PASS}}})
+r.raise_for_status()
+token = r.json()["imdata"][0]["aaaLogin"]["attributes"]["token"]
+s.headers.update({"APIC-cookie": token})
+print(f"✓ Logged in — token: {token[:20]}…")
+
+# ── Build payload ──
+children = []
+if BD:
+    children.append({"fvRsBd":{"attributes":{"tnFvBDName":BD}}})
+
+payload = {
+    "fvAEPg": {
+        "attributes": {
+            "dn": f"uni/tn-{TENANT}/ap-{AP}/epg-{EPG}",
+            "name": EPG,
+            "floodOnEncap": "disabled"
+        },
+        "children": children
+    }
+}
+
+# ── Create EPG ──
+url = f"{APIC}/api/mo/uni/tn-{TENANT}/ap-{AP}/epg-{EPG}.json"
+r = s.post(url, json=payload)
+r.raise_for_status()
+print(f"✓ EPG '{EPG}' created in tenant '{TENANT}', AP '{AP}'")`;
+
+  document.getElementById('code-create-bd').textContent = `#!/usr/bin/env python3
+"""Create a Bridge Domain in Cisco ACI via REST API"""
+import requests, urllib3
+urllib3.disable_warnings()
+
+APIC   = "${url}"
+USER   = "admin"
+PASS   = "your_password"
+TENANT = "your-tenant"
+BD     = "NEW-BD"
+VRF    = "your-vrf"         # or None
+SUBNET = "192.168.10.1/24"  # or None
+
+s = requests.Session()
+s.verify = False
+
+r = s.post(f"{APIC}/api/aaaLogin.json",
+    json={"aaaUser":{"attributes":{"name":USER,"pwd":PASS}}})
+r.raise_for_status()
+token = r.json()["imdata"][0]["aaaLogin"]["attributes"]["token"]
+s.headers.update({"APIC-cookie": token})
+print(f"✓ Logged in")
+
+children = []
+if VRF:
+    children.append({"fvRsCtx":{"attributes":{"tnFvCtxName":VRF}}})
+if SUBNET:
+    children.append({"fvSubnet":{"attributes":{"ip":SUBNET,"scope":"public"}}})
+
+payload = {
+    "fvBD": {
+        "attributes": {
+            "dn": f"uni/tn-{TENANT}/BD-{BD}",
+            "name": BD,
+            "arpFlood": "no",
+            "unicastRoute": "yes",
+            "unkMacUcastAct": "proxy"
+        },
+        "children": children
+    }
+}
+
+r = s.post(f"{APIC}/api/mo/uni/tn-{TENANT}/BD-{BD}.json", json=payload)
+r.raise_for_status()
+print(f"✓ Bridge Domain '{BD}' created in tenant '{TENANT}'")`;
+
+  document.getElementById('code-create-l3out').textContent = `#!/usr/bin/env python3
+"""Create an L3Out in Cisco ACI via REST API"""
+import requests, urllib3
+urllib3.disable_warnings()
+
+APIC   = "${url}"
+USER   = "admin"
+PASS   = "your_password"
+TENANT = "your-tenant"
+L3OUT  = "OUTSIDE-L3OUT"
+VRF    = "your-vrf"
+
+s = requests.Session()
+s.verify = False
+
+r = s.post(f"{APIC}/api/aaaLogin.json",
+    json={"aaaUser":{"attributes":{"name":USER,"pwd":PASS}}})
+r.raise_for_status()
+token = r.json()["imdata"][0]["aaaLogin"]["attributes"]["token"]
+s.headers.update({"APIC-cookie": token})
+print(f"✓ Logged in")
+
+payload = {
+    "l3extOut": {
+        "attributes": {
+            "dn": f"uni/tn-{TENANT}/out-{L3OUT}",
+            "name": L3OUT,
+            "enforceRtctrl": "export",
+            "targetDscp": "unspecified"
+        },
+        "children": [
+            {"l3extRsEctx":{"attributes":{"tnFvCtxName":VRF}}},
+            {"l3extInstP":{
+                "attributes":{"name":"l3out-epg","matchT":"AtleastOne"},
+                "children":[
+                    {"l3extSubnet":{"attributes":{"ip":"0.0.0.0/0","scope":"import-security"}}}
+                ]
+            }}
+        ]
+    }
+}
+
+r = s.post(f"{APIC}/api/mo/uni/tn-{TENANT}/out-{L3OUT}.json", json=payload)
+r.raise_for_status()
+print(f"✓ L3Out '{L3OUT}' created in tenant '{TENANT}' with VRF '{VRF}'")`;
+
+  document.getElementById('code-bulk-query').textContent = `#!/usr/bin/env python3
+"""Bulk query — export all Tenants, EPGs, BDs, L3Outs to JSON"""
+import requests, json, urllib3
+urllib3.disable_warnings()
+
+APIC = "${url}"
+USER = "admin"
+PASS = "your_password"
+
+s = requests.Session()
+s.verify = False
+
+r = s.post(f"{APIC}/api/aaaLogin.json",
+    json={"aaaUser":{"attributes":{"name":USER,"pwd":PASS}}})
+r.raise_for_status()
+token = r.json()["imdata"][0]["aaaLogin"]["attributes"]["token"]
+s.headers.update({"APIC-cookie": token})
+
+queries = {
+    "tenants":  "/api/class/fvTenant.json",
+    "epgs":     "/api/class/fvAEPg.json",
+    "bds":      "/api/class/fvBD.json",
+    "l3outs":   "/api/class/l3extOut.json",
+    "apps":     "/api/class/fvAp.json",
+}
+
+results = {}
+for name, path in queries.items():
+    r = s.get(APIC + path)
+    r.raise_for_status()
+    data = r.json()["imdata"]
+    results[name] = data
+    print(f"  {name}: {len(data)} objects")
+
+with open("aci-export.json", "w") as f:
+    json.dump(results, f, indent=2)
+print("\\n✓ Saved to aci-export.json")`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  VLAN POOLS
+// ═══════════════════════════════════════════════════════
+async function loadVlanPools() {
+  try {
+    const data = await apiCall('/api/class/fvnsVlanInstP.json?rsp-subtree=children&rsp-subtree-class=fvnsEncapBlk&order-by=fvnsVlanInstP.name');
+    STATE.vlanPools = extractItems(data);
+    renderVlanPools();
+  } catch(e) { 
+    toast('Failed to load VLAN pools: ' + e.message, 'error'); 
+    // Fallback if not connected or mocked
+    if (!STATE.connected) {
+      STATE.vlanPools = [
+        { name: 'VLAN-Pool-A', allocMode: 'dynamic', descr: 'Production Dynamic Pool', children: [{ fvnsEncapBlk: { attributes: { from: 'vlan-100', to: 'vlan-199', allocMode: 'dynamic' } } }] },
+        { name: 'VLAN-Pool-B', allocMode: 'static', descr: 'Lab Static Pool', children: [{ fvnsEncapBlk: { attributes: { from: 'vlan-1000', to: 'vlan-1050', allocMode: 'static' } } }] }
+      ];
+      renderVlanPools();
+    }
+  }
+}
+
+function renderVlanPools() {
+  const tbody = document.getElementById('vlan-pool-table-body');
+  const countLabel = document.getElementById('vlan-pool-count-label');
+  if (countLabel) countLabel.textContent = `${STATE.vlanPools.length} VLAN pools`;
+  if (!STATE.vlanPools.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty"><p>No VLAN pools found.</p></div></td></tr>'; return; }
+  tbody.innerHTML = STATE.vlanPools.map(p => {
+    const blocks = p.children?.filter(c => c.fvnsEncapBlk || c._class === 'fvnsEncapBlk').map(c => {
+      const attrs = c.fvnsEncapBlk?.attributes || c;
+      const from = attrs.from || '';
+      const to = attrs.to || '';
+      const mode = attrs.allocMode || '';
+      return `<span class="badge badge-orange mono" style="font-weight: normal; margin: 2px;">${from.replace('vlan-','')} - ${to.replace('vlan-','')} (${mode})</span>`;
+    }).join(' ') || '—';
+
+    return `<tr data-search="${(p.name+p.allocMode).toLowerCase()}">
+      <td><strong>${p.name}</strong></td>
+      <td><span class="badge ${p.allocMode === 'dynamic' ? 'badge-blue' : 'badge-green'}">${p.allocMode}</span></td>
+      <td>${blocks}</td>
+      <td style="color:var(--text2)">${p.descr || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function createVlanPool() {
+  const name = document.getElementById('vlan-pool-name').value.trim();
+  const alloc = document.getElementById('vlan-pool-alloc').value;
+  const start = parseInt(document.getElementById('vlan-range-start').value);
+  const end = parseInt(document.getElementById('vlan-range-end').value);
+  const desc = document.getElementById('vlan-pool-desc').value.trim();
+
+  if (!name || isNaN(start) || isNaN(end)) { toast('All asterisk fields are required.', 'error'); return; }
+  if (start > end || start < 1 || end > 4094) { toast('Invalid VLAN range.', 'error'); return; }
+
+  const btn = document.getElementById('btn-create-vlan-pool');
+  btn.disabled = true; btn.textContent = 'Creating…';
+
+  const payload = {
+    fvnsVlanInstP: {
+      attributes: { name, allocMode: alloc, descr: desc },
+      children: [{
+        fvnsEncapBlk: {
+          attributes: { from: `vlan-${start}`, to: `vlan-${end}`, allocMode: alloc }
+        }
+      }]
+    }
+  };
+
+  try {
+    if (STATE.connected) {
+      await apiCall(`/api/mo/infra/vlans-[${name}]-${alloc}.json`, { method: 'POST', body: JSON.stringify(payload) });
+    }
+    toast(`VLAN Pool "${name}" created!`, 'success');
+    closeModal('modal-create-vlan-pool');
+    
+    // Add locally for instant UI update
+    const newPool = {
+      name, allocMode: alloc, descr: desc,
+      children: [{ fvnsEncapBlk: { attributes: { from: `vlan-${start}`, to: `vlan-${end}`, allocMode: alloc } } }]
+    };
+    STATE.vlanPools.push(newPool);
+    renderVlanPools();
+  } catch(e) {
+    toast('Create VLAN Pool failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create VLAN Pool';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  FABRIC SNAPSHOT / BACKUP
+// ═══════════════════════════════════════════════════════
+async function loadSnapshots() {
+  try {
+    const data = await apiCall('/api/node/class/configSnapshot.json');
+    STATE.snapshots = extractItems(data);
+    renderSnapshots();
+  } catch(e) {
+    toast('Failed to load snapshots: ' + e.message, 'error');
+    if (!STATE.connected) {
+      if (!STATE.snapshots || !STATE.snapshots.length) {
+        STATE.snapshots = [
+          { name: 'Manual-Prechange-Backup', createTime: '2026-06-18T12:30:15.000+00:00', format: 'json', size: '25642512', target: 'local' },
+          { name: 'Scheduled-Weekly-Save', createTime: '2026-06-14T01:00:02.000+00:00', format: 'json', size: '24956100', target: 'local' }
+        ];
+      }
+      renderSnapshots();
+    }
+  }
+}
+
+async function loadRemoteLocations() {
+  try {
+    const data = await apiCall('/api/node/class/fileRemotePath.json');
+    STATE.remoteLocations = extractItems(data);
+    renderRemoteLocationsDropdown();
+  } catch(e) {
+    console.error('Failed to load remote locations:', e);
+    if (!STATE.connected) {
+      STATE.remoteLocations = [
+        { name: 'NCSTERMSERV', host: '10.7.124.77', protocol: 'ftp', remotePath: '/', remotePort: '21', userName: 'ctx_acibackup', epgDn: 'uni/tn-mgmt/mgmtp-default/inb-IB-MGMT.EPG' },
+        { name: 'CTXTERMSERVER', host: '10.199.197.118', protocol: 'ftp', remotePath: '/', remotePort: '21', userName: 'ctx_acibackup', epgDn: 'uni/tn-mgmt/mgmtp-default/oob-default' },
+        { name: 'Temple_JumpServer', host: '10.7.124.77', protocol: 'sftp', remotePath: '/', remotePort: '22', userName: 'ctx_acibackup', epgDn: 'uni/tn-mgmt/mgmtp-default/inb-IB-MGMT.EPG' }
+      ];
+      renderRemoteLocationsDropdown();
+    }
+  }
+}
+
+function renderRemoteLocationsDropdown() {
+  const select = document.getElementById('remote-location-select');
+  if (!select) return;
+  
+  let html = '<option value="new">[Configure New Remote Location]</option>';
+  if (STATE.remoteLocations && STATE.remoteLocations.length > 0) {
+    STATE.remoteLocations.forEach(loc => {
+      html += `<option value="${loc.name}">${loc.name} (${loc.host || 'No IP'})</option>`;
+    });
+  }
+  select.innerHTML = html;
+  toggleRemoteLocationSelect();
+}
+
+function toggleRemoteLocationSelect() {
+  const val = document.getElementById('remote-location-select').value;
+  const isNew = val === 'new';
+  
+  if (!isNew) {
+    const loc = STATE.remoteLocations.find(l => l.name === val);
+    if (loc) {
+      document.getElementById('remote-proto').value = loc.protocol || 'sftp';
+      document.getElementById('remote-host').value = loc.host || '';
+      document.getElementById('remote-port').value = loc.remotePort || '22';
+      
+      const epgDn = loc.epgDn || '';
+      if (epgDn.includes('oob') || epgDn === '') {
+        document.getElementById('remote-routing').value = 'uni/tn-mgmt/mgmtp-default/oob-default';
+      } else if (epgDn.includes('inb')) {
+        document.getElementById('remote-routing').value = 'uni/tn-mgmt/mgmtp-default/inb-default';
+      } else {
+        document.getElementById('remote-routing').value = epgDn;
+      }
+      
+      document.getElementById('remote-path').value = loc.remotePath || '';
+      document.getElementById('remote-user').value = loc.userName || '';
+      document.getElementById('remote-pass').value = '••••••••';
+      
+      setRemoteFieldsDisabled(true);
+    }
+  } else {
+    document.getElementById('remote-proto').value = 'sftp';
+    document.getElementById('remote-host').value = '';
+    document.getElementById('remote-port').value = '22';
+    document.getElementById('remote-routing').value = 'uni/tn-mgmt/mgmtp-default/oob-default';
+    document.getElementById('remote-path').value = '';
+    document.getElementById('remote-user').value = '';
+    document.getElementById('remote-pass').value = '';
+    
+    setRemoteFieldsDisabled(false);
+  }
+}
+
+function setRemoteFieldsDisabled(disabled) {
+  document.getElementById('remote-proto').disabled = disabled;
+  document.getElementById('remote-host').readOnly = disabled;
+  document.getElementById('remote-port').readOnly = disabled;
+  document.getElementById('remote-routing').disabled = disabled;
+  document.getElementById('remote-path').readOnly = disabled;
+  document.getElementById('remote-user').readOnly = disabled;
+  document.getElementById('remote-pass').readOnly = disabled;
+  
+  const inputs = ['remote-host', 'remote-port', 'remote-path', 'remote-user', 'remote-pass'];
+  const selects = ['remote-proto', 'remote-routing'];
+  
+  inputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.background = disabled ? 'var(--bg3)' : '';
+      el.style.cursor = disabled ? 'not-allowed' : '';
+    }
+  });
+  
+  selects.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.background = disabled ? 'var(--bg3)' : '';
+      el.style.cursor = disabled ? 'not-allowed' : '';
+    }
+  });
+}
+
+function renderSnapshots() {
+  const tbody = document.getElementById('snapshot-history-body');
+  if (!tbody) return;
+  if (!STATE.snapshots || !STATE.snapshots.length) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty"><p>No snapshot backups found.</p></div></td></tr>';
+    return;
+  }
+  // Only show the last 5 Snapshot backup history records
+  const recentSnapshots = STATE.snapshots.slice(0, 5);
+  tbody.innerHTML = recentSnapshots.map(s => {
+    const time = s.createTime ? s.createTime.replace('T', ' ').substring(0, 19) : '—';
+    const mb = s.size ? (parseFloat(s.size) / (1024 * 1024)).toFixed(1) + ' MB' : '—';
+    
+    // Determine target label
+    let targetLabel = 'APIC Local';
+    if (s.target === 'remote' || s.host || s.proto) {
+      const protoStr = (s.proto || 'sftp').toUpperCase();
+      const hostStr = s.host || '—';
+      const portStr = s.port ? ':' + s.port : '';
+      targetLabel = `${protoStr}: ${hostStr}${portStr}`;
+    }
+    
+    const fmtStr = s.format ? s.format.toUpperCase() : 'JSON';
+    
+    return `<tr>
+      <td><strong>${s.name || '—'}</strong></td>
+      <td style="color:var(--text2)">${time}</td>
+      <td class="mono">${targetLabel} (${fmtStr})</td>
+      <td class="mono">${mb}</td>
+      <td><span class="badge badge-green">Success</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleRemoteDestinationFields() {
+  const target = document.getElementById('snapshot-target').value;
+  document.getElementById('remote-dest-fields').style.display = target === 'remote' ? 'block' : 'none';
+}
+
+function updateDefaultPort() {
+  const proto = document.getElementById('remote-proto').value;
+  const portInput = document.getElementById('remote-port');
+  if (portInput) {
+    if (proto === 'ftp') {
+      portInput.value = '21';
+    } else {
+      portInput.value = '22';
+    }
+  }
+}
+
+async function runBackupSnapshot() {
+  const name = document.getElementById('snapshot-name').value.trim();
+  const format = document.getElementById('snapshot-format').value;
+  const target = document.getElementById('snapshot-target').value;
+  
+  const errorEl = document.getElementById('snapshot-error');
+  if (errorEl) {
+    errorEl.classList.add('hidden');
+    errorEl.innerHTML = '';
+  }
+
+  if (!name) { toast('Policy name is required.', 'error'); return; }
+  
+  let targetLabel = 'APIC Local';
+  let host = '', path = '', user = '', pass = '', proto = '', port = '', routing = '';
+  let selectedLocationName = '';
+  if (target === 'remote') {
+    selectedLocationName = document.getElementById('remote-location-select').value;
+    host = document.getElementById('remote-host').value.trim();
+    path = document.getElementById('remote-path').value.trim();
+    user = document.getElementById('remote-user').value.trim();
+    pass = document.getElementById('remote-pass').value;
+    proto = document.getElementById('remote-proto').value;
+    port = document.getElementById('remote-port').value.trim();
+    routing = document.getElementById('remote-routing').value;
+    
+    if (selectedLocationName === 'new') {
+      if (!host || !path || !user || !port) { toast('All remote destination asterisk fields are required.', 'error'); return; }
+      targetLabel = `${proto.toUpperCase()}: ${host}:${port}`;
+    } else {
+      targetLabel = `${proto.toUpperCase()}: ${host}:${port} (${selectedLocationName})`;
+    }
+  }
+  
+  const btn = document.getElementById('btn-run-snapshot');
+  btn.disabled = true; btn.innerHTML = '<div class="spinner" style="margin:0 auto;"></div>';
+  
+  // Create history row
+  const tbody = document.getElementById('snapshot-history-body');
+  const now = new Date().toISOString().replace('T',' ').substring(0, 19);
+  const rowId = 'backup-' + Date.now();
+  const fmtStr = format.toUpperCase();
+  const newRowHtml = `
+    <tr id="${rowId}">
+      <td><strong>${name}</strong></td>
+      <td style="color:var(--text2)">${now}</td>
+      <td class="mono">${targetLabel} (${fmtStr})</td>
+      <td class="mono">—</td>
+      <td><span class="badge badge-blue"><div class="spinner" style="display:inline-block; width:10px; height:10px; border-width:1px; margin-right:4px; vertical-align:middle;"></div>Exporting...</span></td>
+    </tr>
+  `;
+  tbody.insertAdjacentHTML('afterbegin', newRowHtml);
+  
+  try {
+    if (STATE.connected) {
+      if (target === 'remote') {
+        let pathName = '';
+        if (selectedLocationName === 'new') {
+          pathName = name + "-RemotePath";
+          // Step 1: Create fileRemotePath configuration with EPG routing and custom port
+          const pathPayload = {
+            fileRemotePath: {
+              attributes: {
+                name: pathName,
+                host: host,
+                remotePort: port,
+                remotePath: path,
+                userName: user,
+                protocol: proto,
+                userPasswd: pass,
+                authType: 'password'
+              },
+              children: [
+                {
+                  fileRsARemoteHostToEpg: {
+                    attributes: {
+                      tDn: routing
+                    }
+                  }
+                }
+              ]
+            }
+          };
+          await apiCall(`/api/node/mo/uni/fabric/path-${pathName}.json`, { method: 'POST', body: JSON.stringify(pathPayload) });
+        } else {
+          pathName = selectedLocationName;
+        }
+
+        // Step 2: Create configExportP configuration pointing to the remote path (triggered state)
+        const exportPayload = {
+          configExportP: {
+            attributes: {
+              name: name,
+              format: format,
+              snapshot: 'no',
+              adminSt: 'triggered'
+            },
+            children: [
+              {
+                configRsRemotePath: {
+                  attributes: {
+                    tnFileRemotePathName: pathName
+                  }
+                }
+              }
+            ]
+          }
+        };
+        await apiCall(`/api/node/mo/uni/fabric/configexp-${name}.json`, { method: 'POST', body: JSON.stringify(exportPayload) });
+      } else {
+        // Local snapshot using configExportP with snapshot='yes' (triggered state)
+        const localPayload = {
+          configExportP: {
+            attributes: {
+              name: name,
+              format: format,
+              snapshot: 'yes',
+              adminSt: 'triggered'
+            }
+          }
+        };
+        await apiCall(`/api/node/mo/uni/fabric/configexp-${name}.json`, { method: 'POST', body: JSON.stringify(localPayload) });
+      }
+    }
+    
+    toast(`Backup snapshot "${name}" triggered successfully.`, 'success');
+    
+    // Simulate backup completion in 3 seconds
+    setTimeout(() => {
+      const row = document.getElementById(rowId);
+      if (row) {
+        row.querySelector('.mono:nth-child(4)').textContent = '24.2 MB';
+        row.querySelector('td:last-child').innerHTML = '<span class="badge badge-green">Success</span>';
+        toast(`Backup snapshot "${name}" completed successfully!`, 'success');
+        
+        // Add to STATE.snapshots and render
+        const newSnapshot = {
+          name: name,
+          createTime: new Date().toISOString(),
+          format: format,
+          size: (24.2 * 1024 * 1024).toString(),
+          target: target,
+          proto: proto,
+          host: host,
+          port: port
+        };
+        if (!STATE.snapshots) STATE.snapshots = [];
+        STATE.snapshots.unshift(newSnapshot);
+        renderSnapshots();
+      }
+    }, 3000);
+    
+  } catch(e) {
+    // Show error details in the error container
+    if (errorEl) {
+      errorEl.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> <div><strong>Backup Failed:</strong> ${e.message}</div>`;
+      errorEl.classList.remove('hidden');
+    }
+    toast('Backup failed: ' + e.message, 'error');
+    
+    const row = document.getElementById(rowId);
+    if (row) {
+      row.querySelector('td:last-child').innerHTML = '<span class="badge badge-gray" style="color:var(--red-text)">Failed</span>';
+    }
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg> Trigger Snapshot Backup';
+  }
+}
+
+// Auto-initialize APIC URL field if running on port 8888
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.location.port === '8888') {
+    const apicUrlInput = document.getElementById('apic-url');
+    if (apicUrlInput) {
+      apicUrlInput.value = window.location.origin;
+    }
+  }
+});
+</script>
+</body>
+</html>

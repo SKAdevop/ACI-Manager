@@ -1,0 +1,22 @@
+# Ignore everything by default
+*
+
+# Allow directories
+!*/
+
+# Whitelist project source files
+!aci-manager.html
+!aci-proxy.py
+!README.md
+!.gitignore
+
+# Blacklist sensitive, temporary, or external folders/files
+apic-mcp-server/
+**/.env
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/*.whl
+**/*.exe
+**/test.txt
