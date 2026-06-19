@@ -396,22 +396,22 @@
     margin-bottom: 24px;
   }
   .stat-card {
-    background: #eef6ff;
-    border: 2px solid #a6cfff;
+    background: #f0fdf4;
+    border: 2px solid #bbf7d0;
     border-radius: var(--radius);
     padding: 16px;
     cursor: pointer;
     transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   }
   .stat-card:hover {
-    background-color: #f3f8ff;
-    border-color: rgba(6, 182, 212, 0.7);
-    box-shadow: 0 8px 24px rgba(14, 165, 233, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+    background-color: #dcfce7;
+    border-color: rgba(34, 197, 94, 0.7);
+    box-shadow: 0 8px 24px rgba(34, 197, 94, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.2);
     transform: translateY(-2px);
   }
-  .stat-label { font-size: 11px; font-weight: 700; color: #0969da; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-  .stat-value { font-size: 26px; font-weight: 600; color: #0969da; line-height: 1; }
-  .stat-sub { font-size: 11px; color: #58a6ff; margin-top: 4px; }
+  .stat-label { font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .stat-value { font-size: 26px; font-weight: 600; color: #166534; line-height: 1; }
+  .stat-sub { font-size: 11px; color: #15803d; margin-top: 4px; }
 
   /* ── SEARCH ── */
   .search-bar {
@@ -541,7 +541,7 @@
 <body>
 
 <!-- TOP BAR -->
-<div id="topbar">
+<div id="topbar" style="position: relative;">
   <a class="logo" href="#">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
@@ -551,6 +551,14 @@
       <span class="logo-signature">ToolSet</span>
     </div>
   </a>
+  <!-- Centered Crescent and Star Emblem -->
+  <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; pointer-events: none;">
+    <svg width="45" height="45" viewBox="0 0 24 24" fill="none" style="color: #ffffff;">
+      <path d="M 4 8 Q 12 11 20 8 Q 12 4 4 8" fill="currentColor" />
+      <path d="M 12 8.5 L 13.05 10.63 L 15.4 10.97 L 13.7 12.63 L 14.1 14.97 L 12 13.87 L 9.9 14.97 L 10.3 12.63 L 8.6 10.97 L 10.95 10.63 Z" fill="currentColor" />
+      <path d="M 4 16 Q 12 13 20 16 Q 12 20 4 16" fill="currentColor" />
+    </svg>
+  </div>
   <div class="spacer"></div>
   <span id="apic-url-display" style="font-size:12px;color:var(--text3);font-family:var(--mono);"></span>
   <span id="conn-badge">● Not connected</span>
@@ -591,6 +599,10 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
       VLAN Pools
     </div>
+    <div class="nav-item" onclick="showPage('interface-profiles')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+      Interface Profiles
+    </div>
     <div class="nav-section">Tools</div>
     <div class="nav-item" onclick="showPage('python-scripts')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
@@ -615,11 +627,11 @@
       <p>Connect to your Cisco APIC controller</p>
       <div class="alert alert-info" style="margin-bottom:20px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span>For direct browser access, APIC must allow CORS or you must run a local proxy. The app will attempt direct connection first.</span>
+        <span>For direct browser access, APIC must allow CORS or you must run a local proxy. Login using local or TACACS.</span>
       </div>
       <div class="form-group">
         <label>APIC URL</label>
-        <input type="url" id="apic-url" value="https://tpaci.bswhealth.org" placeholder="https://apic.example.com">
+        <input type="url" id="apic-url" value="https://apic.example.com" placeholder="https://apic.example.com">
       </div>
       <div class="form-group">
         <label>Username</label>
@@ -795,9 +807,14 @@
           Refresh
         </button>
       </div>
-      <div class="alert alert-info" style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 12px 16px; border-radius: var(--radius); background: var(--bg2); border: 1px solid var(--border); color: var(--text2);">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--blue); flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <span>Spine switches are excluded and will not be fetched. Only leaf switches are displayed.</span>
+      <div class="alert alert-info" style="margin-bottom: 20px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; font-size: 13px; padding: 12px 16px; border-radius: var(--radius); background: var(--bg2); border: 1px solid var(--border); color: var(--text2);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--blue); flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span>Spine switches are excluded and will not be fetched. Only leaf switches are displayed.</span>
+        </div>
+        <div style="padding-left: 26px; font-weight: 600;">
+          To statically Map an interface to EPG, click on the Leaf Switch to see available Interfaces.
+        </div>
       </div>
       <div style="display:flex; gap: 20px; align-items: flex-start;">
         <!-- Left: Switches List -->
@@ -823,6 +840,89 @@
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+    <!-- INTERFACE PROFILES PAGE -->
+    <div id="page-interface-profiles" class="page">
+      <div class="section-header">
+        <div><h2>Interface Profiles</h2><p>Configure interface profiles, port selectors, and policy groups</p></div>
+        <button class="btn btn-ghost" onclick="loadInterfaceProfiles(); loadPolicyGroups(); loadAEPs();">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          Refresh
+        </button>
+      </div>
+      <!-- Center: Create Form -->
+      <div class="card" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h3 style="font-size:14px; font-weight:600; margin-bottom:14px; color:var(--text);">Create Interface Profile</h3>
+        <div id="int-prof-error" class="alert alert-warn hidden" style="margin-bottom:14px; font-size:12px; padding:10px;"></div>
+        
+        <div class="form-group">
+          <label>Interface Profile Name *</label>
+          <select id="int-prof-select" onchange="toggleNewInterfaceProfileFields()">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+        
+        <!-- Inline New Interface Profile field -->
+        <div id="new-int-prof-fields" style="display:none; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; margin-bottom: 14px;">
+          <div class="form-group">
+            <label>New Interface Profile Name *</label>
+            <input type="text" id="int-prof-name" placeholder="e.g. Leaf101-102_IntProf">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Port Selector Name *</label>
+          <input type="text" id="int-sel-name" placeholder="e.g. port-selector-1">
+        </div>
+        <div style="display:flex; gap: 10px;">
+          <div class="form-group" style="flex: 1;">
+            <label>Card *</label>
+            <input type="number" id="int-card-num" value="1">
+          </div>
+          <div class="form-group" style="flex: 1.5;">
+            <label>From Port *</label>
+            <input type="number" id="int-from-port" placeholder="e.g. 1">
+          </div>
+          <div class="form-group" style="flex: 1.5;">
+            <label>To Port *</label>
+            <input type="number" id="int-to-port" placeholder="e.g. 24">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Policy Group Type</label>
+          <select id="int-pg-type" onchange="updatePolicyGroupDropdown()">
+            <option value="access">Access Port (Single Interface)</option>
+            <option value="vpc">VPC Bundle (Virtual Port Channel)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Associated Policy Group *</label>
+          <select id="int-pg-select" onchange="toggleNewPolicyGroupFields()">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+        
+        <!-- Inline New Policy Group fields -->
+        <div id="new-pg-fields" style="display:none; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;">
+          <div class="form-group">
+            <label>New Policy Group Name *</label>
+            <input type="text" id="new-pg-name" placeholder="e.g. Access_Port_PG">
+          </div>
+          <div class="form-group">
+            <label>Attachable Entity Profile (AEP)</label>
+            <select id="new-pg-aep">
+              <option value="">None</option>
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" id="btn-create-int-prof" onclick="createInterfaceProfile()" style="margin-top:20px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Create Interface Profile
+        </button>
       </div>
     </div>
 
@@ -917,104 +1017,78 @@
       <div class="section-header">
         <div><h2>Fabric Snapshot (Backup)</h2><p>Trigger and manage configuration export jobs</p></div>
       </div>
-      <div style="display:flex; gap: 24px; align-items: flex-start;">
-        <!-- Left: Trigger form -->
-        <div class="card" style="flex: 1; min-width: 340px; padding: 20px;">
-          <h3 style="font-size:14px; font-weight:600; margin-bottom:14px; color:var(--text);">Create Backup Export Policy</h3>
-          <div id="snapshot-error" class="alert alert-warn hidden" style="margin-bottom:14px; font-size:12px; padding:10px;"></div>
-          <div class="form-group">
-            <label>Policy Name *</label>
-            <input type="text" id="snapshot-name" placeholder="e.g. Daily-Snapshot-Backup">
-          </div>
-          <div class="form-group">
-            <label>Export Format *</label>
-            <select id="snapshot-format">
-              <option value="json">JSON</option>
-              <option value="xml">XML</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Backup Destination *</label>
-            <select id="snapshot-target" onchange="toggleRemoteDestinationFields()">
-              <option value="local">Local (Snapshot)</option>
-              <option value="remote">Export Destination (Remote Server)</option>
-            </select>
-          </div>
-          
-          <!-- Remote Fields container -->
-          <div id="remote-dest-fields" style="display:none; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;">
-            <div class="form-group">
-              <label>Select Remote Location *</label>
-              <select id="remote-location-select" onchange="toggleRemoteLocationSelect()">
-                <option value="new">[Configure New Remote Location]</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Remote Protocol</label>
-              <select id="remote-proto" onchange="updateDefaultPort()">
-                <option value="sftp">SFTP (SSH)</option>
-                <option value="scp">SCP (SSH)</option>
-                <option value="ftp">FTP</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Host IP / Domain *</label>
-              <input type="text" id="remote-host" placeholder="e.g. 192.168.1.50">
-            </div>
-            <div class="form-group">
-              <label>TCP/SSH Port *</label>
-              <input type="number" id="remote-port" value="22" placeholder="e.g. 22">
-            </div>
-            <div class="form-group">
-              <label>Management Routing (EPG) *</label>
-              <select id="remote-routing">
-                <option value="uni/tn-mgmt/mgmtp-default/oob-default">Out-of-Band (OOB) Management</option>
-                <option value="uni/tn-mgmt/mgmtp-default/inb-default">In-Band (INB) Management</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Remote Path / Directory *</label>
-              <input type="text" id="remote-path" placeholder="e.g. /backups/aci">
-            </div>
-            <div class="form-group">
-              <label>Username *</label>
-              <input type="text" id="remote-user" placeholder="e.g. backup_user">
-            </div>
-            <div class="form-group">
-              <label>Password / SSH Passphrase</label>
-              <input type="password" id="remote-pass" placeholder="••••••••">
-            </div>
-          </div>
-          
-          <button class="btn btn-primary btn-full" id="btn-run-snapshot" onclick="runBackupSnapshot()" style="margin-top:10px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-            Trigger Snapshot Backup
-          </button>
+      <!-- Center: Trigger form -->
+      <div class="card" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h3 style="font-size:14px; font-weight:600; margin-bottom:14px; color:var(--text);">Create Backup Export Policy</h3>
+        <div id="snapshot-error" class="alert alert-warn hidden" style="margin-bottom:14px; font-size:12px; padding:10px;"></div>
+        <div class="form-group">
+          <label>Policy Name *</label>
+          <input type="text" id="snapshot-name" placeholder="e.g. Daily-Snapshot-Backup">
+        </div>
+        <div class="form-group">
+          <label>Export Format *</label>
+          <select id="snapshot-format">
+            <option value="json">JSON</option>
+            <option value="xml">XML</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Backup Destination *</label>
+          <select id="snapshot-target" onchange="toggleRemoteDestinationFields()">
+            <option value="local">Local (Snapshot)</option>
+            <option value="remote">Export Destination (Remote Server)</option>
+          </select>
         </div>
         
-        <!-- Right: History List -->
-        <div class="card" style="flex: 1.5; min-width: 420px;">
-          <div class="card-title">Snapshot Backup History</div>
-          <table>
-            <thead><tr><th>Policy Name</th><th>Triggered Time</th><th>Target</th><th>Size</th><th>Status</th></tr></thead>
-            <tbody id="snapshot-history-body">
-              <tr>
-                <td><strong>Manual-Prechange-Backup</strong></td>
-                <td style="color:var(--text2)">2026-06-18 12:30:15</td>
-                <td class="mono">APIC Local</td>
-                <td class="mono">24.5 MB</td>
-                <td><span class="badge badge-green">Success</span></td>
-              </tr>
-              <tr>
-                <td><strong>Scheduled-Weekly-Save</strong></td>
-                <td style="color:var(--text2)">2026-06-14 01:00:02</td>
-                <td class="mono">SFTP: 10.2.1.80</td>
-                <td class="mono">23.8 MB</td>
-                <td><span class="badge badge-green">Success</span></td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- Remote Fields container -->
+        <div id="remote-dest-fields" style="display:none; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;">
+          <div class="form-group">
+            <label>Select Remote Location *</label>
+            <select id="remote-location-select" onchange="toggleRemoteLocationSelect()">
+              <option value="new">[Configure New Remote Location]</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Remote Protocol</label>
+            <select id="remote-proto" onchange="updateDefaultPort()">
+              <option value="sftp">SFTP (SSH)</option>
+              <option value="scp">SCP (SSH)</option>
+              <option value="ftp">FTP</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Host IP / Domain *</label>
+            <input type="text" id="remote-host" placeholder="e.g. 192.168.1.50">
+          </div>
+          <div class="form-group">
+            <label>TCP/SSH Port *</label>
+            <input type="number" id="remote-port" value="22" placeholder="e.g. 22">
+          </div>
+          <div class="form-group">
+            <label>Management Routing (EPG) *</label>
+            <select id="remote-routing">
+              <option value="uni/tn-mgmt/mgmtp-default/oob-default">Out-of-Band (OOB) Management</option>
+              <option value="uni/tn-mgmt/mgmtp-default/inb-default">In-Band (INB) Management</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Remote Path / Directory *</label>
+            <input type="text" id="remote-path" placeholder="e.g. /backups/aci">
+          </div>
+          <div class="form-group">
+            <label>Username *</label>
+            <input type="text" id="remote-user" placeholder="e.g. backup_user">
+          </div>
+          <div class="form-group">
+            <label>Password / SSH Passphrase</label>
+            <input type="password" id="remote-pass" placeholder="••••••••">
+          </div>
         </div>
+        
+        <button class="btn btn-primary btn-full" id="btn-run-snapshot" onclick="runBackupSnapshot()" style="margin-top:10px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          Trigger Snapshot Backup
+        </button>
       </div>
     </div>
 
@@ -1371,7 +1445,10 @@ let STATE = {
   switches: [],
   vlanPools: [],
   snapshots: [],
-  remoteLocations: []
+  remoteLocations: [],
+  interfaceProfiles: [],
+  policyGroups: { access: [], vpc: [] },
+  aeps: []
 };
 
 // ═══════════════════════════════════════════════════════
@@ -1462,7 +1539,24 @@ function onLoginSuccess() {
 }
 
 function logout() {
-  STATE = { apicUrl: '', token: '', connected: false, tenants: [], epgs: [], bds: [], l3outs: [], apps: [], vrfs: [], switches: [] };
+  STATE = {
+    apicUrl: '',
+    token: '',
+    connected: false,
+    tenants: [],
+    epgs: [],
+    bds: [],
+    l3outs: [],
+    apps: [],
+    vrfs: [],
+    switches: [],
+    vlanPools: [],
+    snapshots: [],
+    remoteLocations: [],
+    interfaceProfiles: [],
+    policyGroups: { access: [], vpc: [] },
+    aeps: []
+  };
   document.getElementById('login-panel').style.display = '';
   document.getElementById('sidebar').style.display = 'none';
   document.getElementById('logout-btn').style.display = 'none';
@@ -1494,9 +1588,10 @@ function showPage(name) {
     l3outs: 4,
     switches: 5,
     'vlan-pools': 6,
-    'python-scripts': 7,
-    'fabric-snapshot': 8,
-    about: 9
+    'interface-profiles': 7,
+    'python-scripts': 8,
+    'fabric-snapshot': 9,
+    about: 10
   };
   const items = document.querySelectorAll('.nav-item');
   const idx = navMap[name];
@@ -1505,6 +1600,7 @@ function showPage(name) {
   if (name === 'python-scripts') buildScripts();
   if (name === 'switches') loadSwitches();
   if (name === 'vlan-pools') loadVlanPools();
+  if (name === 'interface-profiles') { loadInterfaceProfiles(); loadPolicyGroups(); loadAEPs(); }
   if (name === 'fabric-snapshot') { loadSnapshots(); loadRemoteLocations(); }
 }
 
@@ -1512,7 +1608,18 @@ function showPage(name) {
 //  DATA LOADING
 // ═══════════════════════════════════════════════════════
 async function refreshAll() {
-  await Promise.all([loadTenants(), loadEPGs(), loadBDs(), loadL3Outs(), loadApps(), loadSwitches(), loadVlanPools()]);
+  await Promise.all([
+    loadTenants(),
+    loadEPGs(),
+    loadBDs(),
+    loadL3Outs(),
+    loadApps(),
+    loadSwitches(),
+    loadVlanPools(),
+    loadInterfaceProfiles(),
+    loadPolicyGroups(),
+    loadAEPs()
+  ]);
   buildDashboard();
 }
 
@@ -2129,7 +2236,7 @@ function toggleAccordion(id) {
 }
 
 function buildScripts() {
-  const url = STATE.apicUrl || 'https://tpaci.bswhealth.org';
+  const url = STATE.apicUrl || 'https://apic.example.com';
 
   const proxyEl = document.getElementById('code-proxy');
   if (proxyEl) {
@@ -2810,6 +2917,431 @@ async function runBackupSnapshot() {
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg> Trigger Snapshot Backup';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  INTERFACE PROFILES
+// ═══════════════════════════════════════════════════════
+async function loadInterfaceProfiles() {
+  try {
+    const data = await apiCall('/api/node/class/infraAccPortP.json?rsp-subtree=full');
+    
+    const interfaceProfiles = [];
+    if (data && data.imdata) {
+      for (const item of data.imdata) {
+        const p = item.infraAccPortP;
+        if (!p) continue;
+        const profName = p.attributes.name;
+        const selectors = [];
+        if (p.children) {
+          for (const child of p.children) {
+            const sel = child.infraHPortS;
+            if (!sel) continue;
+            const selName = sel.attributes.name;
+            
+            let ports = [];
+            let pgName = '—';
+            let pgType = '—';
+            
+            if (sel.children) {
+              for (const grandchild of sel.children) {
+                if (grandchild.infraPortBlk) {
+                  const blk = grandchild.infraPortBlk.attributes;
+                  const card = blk.fromCard;
+                  const fromPort = blk.fromPort;
+                  const toPort = blk.toPort;
+                  if (fromPort === toPort) {
+                    ports.push(`${card}/${fromPort}`);
+                  } else {
+                    ports.push(`${card}/${fromPort}-${toPort}`);
+                  }
+                } else if (grandchild.infraRsAccBaseGrp) {
+                  const tDn = grandchild.infraRsAccBaseGrp.attributes.tDn || '';
+                  if (tDn) {
+                    if (tDn.includes('/accportgrp-')) {
+                      pgName = tDn.split('/accportgrp-')[1];
+                      pgType = 'Access';
+                    } else if (tDn.includes('/accbundle-')) {
+                      pgName = tDn.split('/accbundle-')[1];
+                      pgType = 'VPC';
+                    } else {
+                      pgName = tDn.substring(tDn.lastIndexOf('/') + 1);
+                      pgType = 'Other';
+                    }
+                  }
+                }
+              }
+            }
+            
+            selectors.push({
+              name: selName,
+              ports: ports.join(', ') || '—',
+              policyGroup: pgName,
+              type: pgType
+            });
+          }
+        }
+        
+        interfaceProfiles.push({
+          name: profName,
+          selectors: selectors
+        });
+      }
+    }
+    
+    STATE.interfaceProfiles = interfaceProfiles;
+    renderInterfaceProfiles();
+  } catch(e) {
+    console.error('Failed to load interface profiles:', e);
+    toast('Failed to load interface profiles: ' + e.message, 'error');
+    if (!STATE.connected) {
+      STATE.interfaceProfiles = [
+        {
+          name: 'Leaf101-102_IntProf',
+          selectors: [
+            {
+              name: 'port-selector-1',
+              ports: '1/1-24',
+              policyGroup: 'Access_Port_PG',
+              type: 'Access'
+            }
+          ]
+        },
+        {
+          name: 'Leaf103_IntProf',
+          selectors: [
+            {
+              name: 'vpc-selector-10',
+              ports: '1/10',
+              policyGroup: 'VPC_Bundle_PG',
+              type: 'VPC'
+            }
+          ]
+        }
+      ];
+      renderInterfaceProfiles();
+    }
+  }
+}
+
+function renderInterfaceProfiles() {
+  const select = document.getElementById('int-prof-select');
+  if (!select) return;
+  
+  let html = '<option value="">Select profile…</option>';
+  if (STATE.interfaceProfiles && STATE.interfaceProfiles.length) {
+    STATE.interfaceProfiles.forEach(prof => {
+      html += `<option value="${prof.name}">${prof.name}</option>`;
+    });
+  }
+  html += '<option value="new">[Create New Interface Profile...]</option>';
+  
+  select.innerHTML = html;
+  toggleNewInterfaceProfileFields();
+}
+
+function toggleNewInterfaceProfileFields() {
+  const select = document.getElementById('int-prof-select');
+  const fields = document.getElementById('new-int-prof-fields');
+  if (!select || !fields) return;
+  
+  if (select.value === 'new') {
+    fields.style.display = 'block';
+  } else {
+    fields.style.display = 'none';
+  }
+}
+
+async function loadPolicyGroups() {
+  try {
+    const [accessData, vpcData] = await Promise.all([
+      apiCall('/api/node/class/infraAccPortGrp.json'),
+      apiCall('/api/node/class/infraAccBndlGrp.json')
+    ]);
+    
+    STATE.policyGroups = {
+      access: extractItems(accessData).map(item => item.name),
+      vpc: extractItems(vpcData).map(item => item.name)
+    };
+    updatePolicyGroupDropdown();
+  } catch(e) {
+    console.error('Failed to load policy groups:', e);
+    if (!STATE.connected) {
+      STATE.policyGroups = {
+        access: ['Access_Port_PG', 'Lab_Access_PG'],
+        vpc: ['VPC_Bundle_PG', 'Core_VPC_PG']
+      };
+      updatePolicyGroupDropdown();
+    }
+  }
+}
+
+function updatePolicyGroupDropdown() {
+  const type = document.getElementById('int-pg-type').value;
+  const select = document.getElementById('int-pg-select');
+  if (!select) return;
+  
+  let pgs = [];
+  if (type === 'access') {
+    pgs = STATE.policyGroups.access || [];
+  } else if (type === 'vpc') {
+    pgs = STATE.policyGroups.vpc || [];
+  }
+  
+  let html = '';
+  pgs.forEach(pg => {
+    html += `<option value="${pg}">${pg}</option>`;
+  });
+  html += '<option value="new">[Create New Policy Group...]</option>';
+  
+  select.innerHTML = html;
+  toggleNewPolicyGroupFields();
+}
+
+function toggleNewPolicyGroupFields() {
+  const select = document.getElementById('int-pg-select');
+  const fields = document.getElementById('new-pg-fields');
+  if (!select || !fields) return;
+  
+  if (select.value === 'new') {
+    fields.style.display = 'block';
+  } else {
+    fields.style.display = 'none';
+  }
+}
+
+async function loadAEPs() {
+  try {
+    const data = await apiCall('/api/node/class/infraAttEntityP.json');
+    STATE.aeps = extractItems(data).map(item => item.name);
+    renderAEPsDropdown();
+  } catch(e) {
+    console.error('Failed to load AEPs:', e);
+    if (!STATE.connected) {
+      STATE.aeps = ['AEP-Production', 'AEP-Lab', 'AEP-DMZ'];
+      renderAEPsDropdown();
+    }
+  }
+}
+
+function renderAEPsDropdown() {
+  const select = document.getElementById('new-pg-aep');
+  if (!select) return;
+  
+  let html = '<option value="">None</option>';
+  STATE.aeps.forEach(aep => {
+    html += `<option value="${aep}">${aep}</option>`;
+  });
+  select.innerHTML = html;
+}
+
+async function createInterfaceProfile() {
+  const profSelect = document.getElementById('int-prof-select');
+  let name = '';
+  if (profSelect && profSelect.value !== 'new') {
+    name = profSelect.value.trim();
+  } else {
+    name = document.getElementById('int-prof-name').value.trim();
+  }
+  const selectorName = document.getElementById('int-sel-name').value.trim();
+  const cardStr = document.getElementById('int-card-num').value.trim();
+  const fromPortStr = document.getElementById('int-from-port').value.trim();
+  const toPortStr = document.getElementById('int-to-port').value.trim();
+  const pgType = document.getElementById('int-pg-type').value;
+  const pgSelect = document.getElementById('int-pg-select').value;
+  
+  const errorEl = document.getElementById('int-prof-error');
+  errorEl.classList.add('hidden');
+  errorEl.textContent = '';
+  
+  if (!name || !selectorName || !cardStr || !fromPortStr || !toPortStr) {
+    toast('All asterisk fields are required.', 'error');
+    errorEl.textContent = 'All asterisk fields are required.';
+    errorEl.classList.remove('hidden');
+    return;
+  }
+  
+  const card = parseInt(cardStr);
+  const fromPort = parseInt(fromPortStr);
+  const toPort = parseInt(toPortStr);
+  
+  if (isNaN(card) || isNaN(fromPort) || isNaN(toPort) || card < 1 || fromPort < 1 || toPort < 1 || fromPort > toPort) {
+    toast('Invalid card or port range.', 'error');
+    errorEl.textContent = 'Invalid card or port range. Make sure "From Port" is less than or equal to "To Port".';
+    errorEl.classList.remove('hidden');
+    return;
+  }
+  
+  let pgName = pgSelect;
+  let isNewPg = pgSelect === 'new';
+  
+  if (isNewPg) {
+    pgName = document.getElementById('new-pg-name').value.trim();
+    if (!pgName) {
+      toast('New Policy Group Name is required.', 'error');
+      errorEl.textContent = 'New Policy Group Name is required when "[Create New Policy Group...]" is selected.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+  } else if (!pgName) {
+    toast('Associated Policy Group is required.', 'error');
+    errorEl.textContent = 'Associated Policy Group is required.';
+    errorEl.classList.remove('hidden');
+    return;
+  }
+  
+  const btn = document.getElementById('btn-create-int-prof');
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.textContent = 'Creating...';
+  
+  try {
+    // 1. If new policy group, create it first
+    if (isNewPg) {
+      const aepName = document.getElementById('new-pg-aep').value;
+      const pgChildren = [];
+      if (aepName) {
+        pgChildren.push({
+          "infraRsAttEntP": {
+            "attributes": {
+              "tDn": `uni/infra/attentp-${aepName}`
+            }
+          }
+        });
+      }
+      
+      if (pgType === 'access') {
+        const accPgPayload = {
+          "infraAccPortGrp": {
+            "attributes": { "name": pgName },
+            "children": pgChildren
+          }
+        };
+        if (STATE.connected) {
+          await apiCall(`/api/node/mo/uni/infra/funcprof/accportgrp-${pgName}.json`, {
+            method: 'POST',
+            body: JSON.stringify(accPgPayload)
+          });
+        }
+        if (!STATE.policyGroups.access.includes(pgName)) {
+          STATE.policyGroups.access.push(pgName);
+        }
+      } else if (pgType === 'vpc') {
+        const vpcPgPayload = {
+          "infraAccBndlGrp": {
+            "attributes": { "name": pgName, "lagT": "node" },
+            "children": pgChildren
+          }
+        };
+        if (STATE.connected) {
+          await apiCall(`/api/node/mo/uni/infra/funcprof/accbundle-${pgName}.json`, {
+            method: 'POST',
+            body: JSON.stringify(vpcPgPayload)
+          });
+        }
+        if (!STATE.policyGroups.vpc.includes(pgName)) {
+          STATE.policyGroups.vpc.push(pgName);
+        }
+      }
+    }
+    
+    // 2. Create Interface Profile + Selector + Port Block
+    const targetPgDn = pgType === 'access' ? `uni/infra/funcprof/accportgrp-${pgName}` : `uni/infra/funcprof/accbundle-${pgName}`;
+    
+    const profilePayload = {
+      "infraAccPortP": {
+        "attributes": { "name": name },
+        "children": [
+          {
+            "infraHPortS": {
+              "attributes": {
+                "name": selectorName,
+                "type": "range"
+              },
+              "children": [
+                {
+                  "infraPortBlk": {
+                    "attributes": {
+                      "name": "block1",
+                      "fromCard": card.toString(),
+                      "toCard": card.toString(),
+                      "fromPort": fromPort.toString(),
+                      "toPort": toPort.toString()
+                    }
+                  }
+                },
+                {
+                  "infraRsAccBaseGrp": {
+                    "attributes": {
+                      "tDn": targetPgDn
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    };
+    
+    if (STATE.connected) {
+      await apiCall(`/api/node/mo/uni/infra/accportprof-${name}.json`, {
+        method: 'POST',
+        body: JSON.stringify(profilePayload)
+      });
+    }
+    
+    toast(`Interface Profile "${name}" created successfully!`, 'success');
+    
+    // Update local state for instant rendering
+    let existingProf = STATE.interfaceProfiles.find(p => p.name === name);
+    const newSelector = {
+      name: selectorName,
+      ports: fromPort === toPort ? `${card}/${fromPort}` : `${card}/${fromPort}-${toPort}`,
+      policyGroup: pgName,
+      type: pgType === 'access' ? 'Access' : 'VPC'
+    };
+    
+    if (existingProf) {
+      if (!existingProf.selectors) existingProf.selectors = [];
+      existingProf.selectors.push(newSelector);
+    } else {
+      STATE.interfaceProfiles.unshift({
+        name: name,
+        selectors: [newSelector]
+      });
+    }
+    
+    // Reset form fields
+    const profSelect = document.getElementById('int-prof-select');
+    if (profSelect) profSelect.value = '';
+    const newProfFields = document.getElementById('new-int-prof-fields');
+    if (newProfFields) newProfFields.style.display = 'none';
+    
+    document.getElementById('int-prof-name').value = '';
+    document.getElementById('int-sel-name').value = '';
+    document.getElementById('int-card-num').value = '1';
+    document.getElementById('int-from-port').value = '';
+    document.getElementById('int-to-port').value = '';
+    document.getElementById('new-pg-name').value = '';
+    document.getElementById('new-pg-aep').value = '';
+    
+    if (STATE.connected) {
+      await loadInterfaceProfiles();
+      await loadPolicyGroups();
+    } else {
+      updatePolicyGroupDropdown();
+      renderInterfaceProfiles();
+    }
+    
+  } catch(e) {
+    toast('Failed to create interface profile: ' + e.message, 'error');
+    errorEl.textContent = 'Failed to create: ' + e.message;
+    errorEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
   }
 }
 

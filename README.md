@@ -11,16 +11,19 @@ A modern, web-based management dashboard and automation toolset for Cisco ACI (A
 - Visual counters of ACI fabric components: Tenants, Application Profiles, EPGs, Bridge Domains, L3Outs, Switches, VLAN Pools, and Snapshots.
 
 ### 🌐 Fabric Management
+- **Interface Profiles**: Center-aligned, simplified form to configure interface profiles (`infraAccPortP`) and port selectors (`infraHPortS`). 
+  - Features an **Interface Profile Name dropdown** dynamically populated with existing interface profiles configured in the fabric.
+  - Supports inline creation of new profiles via the `[Create New Interface Profile...]` option.
+  - Allows mapping custom port blocks (Card, From Port, To Port) to Access Port (`infraAccPortGrp`) or VPC Bundle (`infraAccBndlGrp`) policy groups, including inline creation of new policy groups with Attachable Access Entity Profile (`infraAttEntityP`) linkage.
 - **VLAN Pools**: Monitor configured VLAN ranges, allocation modes (static/dynamic), and provision new VLAN pools instantly.
 - **Fabric Switches**: Monitor leaf switches and inspect physical interfaces, admin state, and link status. Spine switches are excluded to keep management focused on Leaf access ports.
 
 ### 🛠️ Advanced Tools & Automation
 - **Fabric Snapshot (Backup)**:
-  - Trigger configuration backups immediately (using ACI's `configExportP` class).
+  - Clean, simplified, and centered form to trigger configuration backups immediately (using ACI's `configExportP` class).
   - Export to **Local (Snapshot)** rollback points on the APIC or to a **Remote Export Destination** (SFTP, SCP, FTP).
   - Integrates existing ACI **Remote Locations** (class `fileRemotePath`) in a dropdown list to automatically populate routing and routing credentials, preventing duplicate configurations.
   - Supports custom TCP/SSH Ports and **Management Routing EPGs** (Out-of-Band vs. In-Band) via `fileRsARemoteHostToEpg` to guarantee correct routing for SSH/TCP connections.
-  - Lists the last 5 backup history logs with size and execution status.
 - **EPG Static Port Binding**: Map specific leaf switch physical ports directly to Endpoint Groups.
 - **Python Script Library**: Ready-to-use scripts (Create EPG, Create BD) for REST API automation, organized in collapsible accordion cards.
 - **About**: Version information (`v1.1.0`) and system details.
@@ -42,7 +45,7 @@ A modern, web-based management dashboard and automation toolset for Cisco ACI (A
 
 ### Configuration
 1. Clone the repository to your local directory.
-2. Edit the `.env` file in the root directory with your APIC credentials and target URL:
+2. Edit the `.env` file in the root directory with dummy APIC credentials and target URL:
    ```env
    APIC_URL=https://your-apic-domain-or-ip
    APIC_USERNAME=your-username
