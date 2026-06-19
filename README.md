@@ -2,6 +2,8 @@
 
 A modern, web-based management dashboard and automation toolset for Cisco ACI (Application Centric Infrastructure) fabrics. Designed to simplify administration, configuration, and monitoring of ACI environments through a clean, intuitive, and responsive single-page user interface.
 
+![ACI Manager Dashboard](Capture.png)
+
 ---
 
 ## Key Features
@@ -62,3 +64,13 @@ python aci-proxy.py
 
 Open your browser and navigate to:
 **`http://localhost:8888`**
+
+---
+
+## License
+
+This software is distributed under the **ACI Manager (ToolSet) Limited Use License**:
+- **Personal Use**: Free for private, personal, hobbyist, and educational use.
+- **Corporate & Commercial Use**: A paid commercial license is required for any use by companies, corporations, partnerships, or government agencies. Please contact the copyright holder to obtain a commercial license.
+
+For detailed terms, please see the [LICENSE](LICENSE) file.
