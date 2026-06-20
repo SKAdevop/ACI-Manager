@@ -43,7 +43,7 @@ A modern, web-based management dashboard and automation toolset for Cisco ACI (A
 
 ### Prerequisites
 - Python 3.x
-- Access to a Cisco ACI APIC controller.
+- Access to a Cisco ACI APIC controllers. (Tested for versions 4.2 - 5.3(2))
 
 ### Configuration
 1. Clone the repository to your local directory.

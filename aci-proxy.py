@@ -11,10 +11,59 @@ Login URL:  http://localhost:8888  (the proxy handles forwarding)
 """
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import urllib.request, urllib.error, ssl, os, mimetypes
+import urllib.request, urllib.error, ssl, os, mimetypes, sys, argparse, json
 
-TARGET  = "https://yourapic.url.com"   # ← your APIC
-PORT    = 8888
+DEFAULT_TARGET = "https://yourapic.url.com"
+TARGET = DEFAULT_TARGET
+PORT   = 8888
+
+# 1. Try APIC_URL environment variable
+if "APIC_URL" in os.environ:
+    TARGET = os.environ["APIC_URL"]
+    print(f"[config] Using APIC URL from environment: {TARGET}")
+
+# 2. Try config.json in the same directory as this script/executable
+else:
+    exe_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+    config_path = os.path.join(exe_dir, "config.json")
+    if os.path.isfile(config_path):
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                cfg = json.load(f)
+                if "apic_url" in cfg:
+                    TARGET = cfg["apic_url"]
+                    print(f"[config] Loaded APIC URL from config.json: {TARGET}")
+        except Exception as e:
+            print(f"[config] Error reading config.json: {e}")
+
+# 3. Try command-line arguments (--url or -u)
+parser = argparse.ArgumentParser(description="ACI CORS Proxy Server")
+parser.add_argument("--url", "-u", help="Target APIC URL (e.g., https://my-apic.com)")
+args, unknown = parser.parse_known_args()
+if args.url:
+    TARGET = args.url
+    print(f"[config] Using APIC URL from command line: {TARGET}")
+
+# 4. Prompt user if running interactively in terminal and still using default
+elif sys.stdin.isatty() and sys.stdout.isatty():
+    try:
+        print(f"\nNo custom APIC URL configured (via CLI, Env, or config.json).")
+        user_input = input(f"Enter target APIC URL [{DEFAULT_TARGET}]: ").strip()
+        if user_input:
+            TARGET = user_input
+            print(f"[config] Using entered APIC URL: {TARGET}")
+        else:
+            print(f"[config] Using default APIC URL: {TARGET}")
+    except (KeyboardInterrupt, EOFError):
+        print(f"\n[config] Using default APIC URL: {TARGET}")
+else:
+    print(f"[config] Running in non-interactive mode. Using default APIC URL: {TARGET}")
+
+# Normalize TARGET format (strip whitespace, ensure protocol prefix, remove trailing slash)
+TARGET = TARGET.strip().rstrip("/")
+if not TARGET.startswith("http://") and not TARGET.startswith("https://"):
+    TARGET = "https://" + TARGET
+
 WEBROOT = os.path.dirname(os.path.abspath(__file__))  # serve files from same folder
 
 ctx = ssl.create_default_context()

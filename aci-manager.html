@@ -2792,16 +2792,18 @@ async function runBackupSnapshot() {
   const now = new Date().toISOString().replace('T',' ').substring(0, 19);
   const rowId = 'backup-' + Date.now();
   const fmtStr = format.toUpperCase();
-  const newRowHtml = `
-    <tr id="${rowId}">
-      <td><strong>${name}</strong></td>
-      <td style="color:var(--text2)">${now}</td>
-      <td class="mono">${targetLabel} (${fmtStr})</td>
-      <td class="mono">—</td>
-      <td><span class="badge badge-blue"><div class="spinner" style="display:inline-block; width:10px; height:10px; border-width:1px; margin-right:4px; vertical-align:middle;"></div>Exporting...</span></td>
-    </tr>
-  `;
-  tbody.insertAdjacentHTML('afterbegin', newRowHtml);
+  if (tbody) {
+    const newRowHtml = `
+      <tr id="${rowId}">
+        <td><strong>${name}</strong></td>
+        <td style="color:var(--text2)">${now}</td>
+        <td class="mono">${targetLabel} (${fmtStr})</td>
+        <td class="mono">—</td>
+        <td><span class="badge badge-blue"><div class="spinner" style="display:inline-block; width:10px; height:10px; border-width:1px; margin-right:4px; vertical-align:middle;"></div>Exporting...</span></td>
+      </tr>
+    `;
+    tbody.insertAdjacentHTML('afterbegin', newRowHtml);
+  }
   
   try {
     if (STATE.connected) {
@@ -2883,24 +2885,25 @@ async function runBackupSnapshot() {
       if (row) {
         row.querySelector('.mono:nth-child(4)').textContent = '24.2 MB';
         row.querySelector('td:last-child').innerHTML = '<span class="badge badge-green">Success</span>';
-        toast(`Backup snapshot "${name}" completed successfully!`, 'success');
-        
-        // Add to STATE.snapshots and render
-        const newSnapshot = {
-          name: name,
-          createTime: new Date().toISOString(),
-          format: format,
-          size: (24.2 * 1024 * 1024).toString(),
-          target: target,
-          proto: proto,
-          host: host,
-          port: port
-        };
-        if (!STATE.snapshots) STATE.snapshots = [];
-        STATE.snapshots.unshift(newSnapshot);
-        renderSnapshots();
       }
+      toast(`Backup snapshot "${name}" completed successfully!`, 'success');
+      
+      // Add to STATE.snapshots and render
+      const newSnapshot = {
+        name: name,
+        createTime: new Date().toISOString(),
+        format: format,
+        size: (24.2 * 1024 * 1024).toString(),
+        target: target,
+        proto: proto,
+        host: host,
+        port: port
+      };
+      if (!STATE.snapshots) STATE.snapshots = [];
+      STATE.snapshots.unshift(newSnapshot);
+      renderSnapshots();
     }, 3000);
+    
     
   } catch(e) {
     // Show error details in the error container
