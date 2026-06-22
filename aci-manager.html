@@ -269,12 +269,31 @@
     text-align: left;
     padding: 9px 14px;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: bold; /* Make right menu columns bold */
     color: var(--text3);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     border-bottom: 1px solid var(--border);
     background: var(--bg3);
+    position: relative; /* For resizer absolute layout */
+  }
+
+  .resizer {
+    position: absolute;
+    top: 15%;
+    right: 0;
+    width: 6px;
+    height: 70%;
+    cursor: col-resize;
+    user-select: none;
+    border-right: 2px solid var(--border);
+    opacity: 0.5;
+    transition: opacity 0.2s, border-color 0.2s;
+    z-index: 1;
+  }
+  .resizer:hover, .resizer.resizing {
+    opacity: 1;
+    border-right: 2px solid var(--accent);
   }
   td {
     padding: 9px 14px;
@@ -551,14 +570,6 @@
       <span class="logo-signature">ToolSet</span>
     </div>
   </a>
-  <!-- Centered Crescent and Star Emblem -->
-  <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; pointer-events: none;">
-    <svg width="45" height="45" viewBox="0 0 24 24" fill="none" style="color: #ffffff;">
-      <path d="M 4 8 Q 12 11 20 8 Q 12 4 4 8" fill="currentColor" />
-      <path d="M 12 8.5 L 13.05 10.63 L 15.4 10.97 L 13.7 12.63 L 14.1 14.97 L 12 13.87 L 9.9 14.97 L 10.3 12.63 L 8.6 10.97 L 10.95 10.63 Z" fill="currentColor" />
-      <path d="M 4 16 Q 12 13 20 16 Q 12 20 4 16" fill="currentColor" />
-    </svg>
-  </div>
   <div class="spacer"></div>
   <span id="apic-url-display" style="font-size:12px;color:var(--text3);font-family:var(--mono);"></span>
   <span id="conn-badge">● Not connected</span>
@@ -1602,6 +1613,8 @@ function showPage(name) {
   if (name === 'vlan-pools') loadVlanPools();
   if (name === 'interface-profiles') { loadInterfaceProfiles(); loadPolicyGroups(); loadAEPs(); }
   if (name === 'fabric-snapshot') { loadSnapshots(); loadRemoteLocations(); }
+  
+  setTimeout(initResizableColumns, 50);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1720,6 +1733,7 @@ function buildDashboard() {
         <td style="color:var(--text2)">${t.descr || '—'}</td>
       </tr>`).join('') +
     '</tbody></table>';
+  initResizableColumns();
 }
 
 function renderTenants() {
@@ -1728,7 +1742,7 @@ function renderTenants() {
   if (!STATE.tenants.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty"><p>No tenants found.</p></div></td></tr>'; return; }
   tbody.innerHTML = STATE.tenants.map(t => `
     <tr data-search="${(t.name+t.dn+t.descr).toLowerCase()}">
-      <td><strong>${t.name}</strong></td>
+      <td>${t.name}</td>
       <td class="mono">${t.dn}</td>
       <td style="color:var(--text2)">${t.descr || '—'}</td>
       <td class="mono" style="font-size:11px;color:var(--text3)">${t.uid || '—'}</td>
@@ -1754,7 +1768,7 @@ function renderEPGs() {
     const desc = e.descr || '—';
     
     return `<tr data-search="${(e.name+tenant+ap+bd+desc).toLowerCase()}">
-      <td><strong>${e.name}</strong></td>
+      <td>${e.name}</td>
       <td><span class="badge badge-blue">${tenant}</span></td>
       <td>${ap}</td>
       <td>${bd !== '—' ? `<span class="badge badge-gray">${bd}</span>` : '—'}</td>
@@ -1787,7 +1801,7 @@ function renderBDs() {
     const unicast = b.unicastRoute === 'yes' ? 'True' : 'False';
     
     return `<tr data-search="${(b.name+tenant+vrf).toLowerCase()}">
-      <td><strong>${b.name}</strong></td>
+      <td>${b.name}</td>
       <td><span class="badge badge-blue">${tenant}</span></td>
       <td>${vrf !== '—' ? `<span class="badge badge-green">${vrf}</span>` : '—'}</td>
       <td>${subnetsStr}</td>
@@ -1806,7 +1820,7 @@ function renderL3Outs() {
     const vrfChild = l.children?.find(c => c.l3extRsEctx);
     const vrf = vrfChild?.l3extRsEctx?.attributes?.tnFvCtxName || '—';
     return `<tr data-search="${(l.name+tenant+vrf).toLowerCase()}">
-      <td><strong>${l.name}</strong></td>
+      <td>${l.name}</td>
       <td><span class="badge badge-blue">${tenant}</span></td>
       <td>${vrf !== '—' ? `<span class="badge badge-green">${vrf}</span>` : '—'}</td>
       <td>${l.targetDscp || 'unspecified'}</td>
@@ -2524,7 +2538,7 @@ function renderVlanPools() {
     }).join(' ') || '—';
 
     return `<tr data-search="${(p.name+p.allocMode).toLowerCase()}">
-      <td><strong>${p.name}</strong></td>
+      <td>${p.name}</td>
       <td><span class="badge ${p.allocMode === 'dynamic' ? 'badge-blue' : 'badge-green'}">${p.allocMode}</span></td>
       <td>${blocks}</td>
       <td style="color:var(--text2)">${p.descr || '—'}</td>
@@ -3348,6 +3362,43 @@ async function createInterfaceProfile() {
   }
 }
 
+function createResizableColumn(th, resizer) {
+  let startX, startWidth;
+
+  resizer.addEventListener('mousedown', function (e) {
+    startX = e.clientX;
+    startWidth = th.offsetWidth;
+    resizer.classList.add('resizing');
+    
+    document.addEventListener('mousemove', mouseMoveHandler);
+    document.addEventListener('mouseup', mouseUpHandler);
+    
+    e.preventDefault();
+  });
+
+  function mouseMoveHandler(e) {
+    const dx = e.clientX - startX;
+    th.style.width = `${Math.max(50, startWidth + dx)}px`;
+  }
+
+  function mouseUpHandler() {
+    resizer.classList.remove('resizing');
+    document.removeEventListener('mousemove', mouseMoveHandler);
+    document.removeEventListener('mouseup', mouseUpHandler);
+  }
+}
+
+function initResizableColumns() {
+  document.querySelectorAll('th').forEach(th => {
+    if (th.querySelector('.resizer')) return;
+    th.style.position = 'relative';
+    const resizer = document.createElement('div');
+    resizer.classList.add('resizer');
+    th.appendChild(resizer);
+    createResizableColumn(th, resizer);
+  });
+}
+
 // Auto-initialize APIC URL field if running on port 8888
 document.addEventListener('DOMContentLoaded', () => {
   if (window.location.port === '8888') {
@@ -3356,6 +3407,7 @@ document.addEventListener('DOMContentLoaded', () => {
       apicUrlInput.value = window.location.origin;
     }
   }
+  initResizableColumns();
 });
 </script>
 </body>
