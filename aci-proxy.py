@@ -11,9 +11,21 @@ Login URL:  http://localhost:8888  (the proxy handles forwarding)
 """
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import urllib.request, urllib.error, ssl, os, mimetypes, sys, argparse, json
+import urllib.request, urllib.error, ssl, os, mimetypes, sys, argparse, json, threading, webbrowser
 
-DEFAULT_TARGET = "https://yourapic.url.com"
+# Prevent PyInstaller GUI app crashes by redirecting None streams to devnull
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, "w")
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, "w")
+if sys.stdin is None:
+    class DummyStdin:
+        def isatty(self): return False
+        def read(self, *args, **kwargs): return ""
+        def readline(self, *args, **kwargs): return ""
+    sys.stdin = DummyStdin()
+
+DEFAULT_TARGET = "https://myaci.company.com"
 TARGET = DEFAULT_TARGET
 PORT   = 8888
 
@@ -45,7 +57,7 @@ if args.url:
     print(f"[config] Using APIC URL from command line: {TARGET}")
 
 # 4. Prompt user if running interactively in terminal and still using default
-elif sys.stdin.isatty() and sys.stdout.isatty():
+elif sys.stdin and hasattr(sys.stdin, "isatty") and sys.stdin.isatty() and sys.stdout and hasattr(sys.stdout, "isatty") and sys.stdout.isatty():
     try:
         print(f"\nNo custom APIC URL configured (via CLI, Env, or config.json).")
         user_input = input(f"Enter target APIC URL [{DEFAULT_TARGET}]: ").strip()
@@ -155,25 +167,188 @@ class Handler(BaseHTTPRequestHandler):
         code   = args[1] if len(args) > 1 else "?"
         print(f"  {code}  {self.path}")
 
+def run_tkinter_gui(server):
+    import tkinter as tk
+    
+    root = tk.Tk()
+    root.title("ACI Manager ToolSet")
+    root.geometry("480x280")
+    root.resizable(False, False)
+    
+    # Try to set the window icon if it exists
+    exe_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+    icon_path = os.path.join(exe_dir, "ACI Manager.ico")
+    if not os.path.isfile(icon_path):
+        icon_path = os.path.join(exe_dir, "app_icon.ico")
+    if os.path.isfile(icon_path):
+        try:
+            root.iconbitmap(icon_path)
+        except Exception:
+            pass
+
+    # Styling
+    root.configure(bg="#f8fafc")
+    
+    # Title Label
+    title_label = tk.Label(
+        root, 
+        text="ACI Manager - Local Server Controller", 
+        font=("Segoe UI", 13, "bold"), 
+        fg="#0f172a", 
+        bg="#f8fafc",
+        pady=10
+    )
+    title_label.pack()
+
+    # Status Label
+    status_label = tk.Label(
+        root, 
+        text="● Local Server is Active & Running", 
+        font=("Segoe UI", 10, "bold"), 
+        fg="#16a34a", 
+        bg="#f8fafc"
+    )
+    status_label.pack(pady=3)
+
+    # Info Box
+    info_text = (
+        f"  Local Access:  http://localhost:{PORT}\n"
+        f"  Target APIC:   {TARGET}"
+    )
+    info_label = tk.Label(
+        root, 
+        text=info_text, 
+        font=("Consolas", 10), 
+        fg="#334155", 
+        bg="#f1f5f9",
+        padx=15,
+        pady=12,
+        justify=tk.LEFT,
+        relief=tk.SOLID,
+        borderwidth=1
+    )
+    info_label.pack(pady=8, fill=tk.X, padx=30)
+
+    # Instruction Label
+    inst_label = tk.Label(
+        root, 
+        text="Open the browser to log in to your Cisco APIC controller:", 
+        font=("Segoe UI", 9), 
+        fg="#64748b", 
+        bg="#f8fafc"
+    )
+    inst_label.pack(pady=4)
+
+    # Buttons Frame
+    btn_frame = tk.Frame(root, bg="#f8fafc")
+    btn_frame.pack(pady=8)
+
+    # Open Browser Button
+    btn_open = tk.Button(
+        btn_frame, 
+        text="Open Web App", 
+        font=("Segoe UI", 9, "bold"), 
+        fg="#ffffff", 
+        bg="#0284c7", 
+        activeforeground="#ffffff",
+        activebackground="#0369a1",
+        padx=14,
+        pady=6,
+        command=lambda: webbrowser.open(f"http://localhost:{PORT}"),
+        cursor="hand2"
+    )
+    btn_open.pack(side=tk.LEFT, padx=8)
+
+    # Stop Button
+    btn_stop = tk.Button(
+        btn_frame, 
+        text="Stop Server", 
+        font=("Segoe UI", 9, "bold"), 
+        fg="#ffffff", 
+        bg="#dc2626", 
+        activeforeground="#ffffff",
+        activebackground="#b91c1c",
+        padx=14,
+        pady=6,
+        command=lambda: (server.shutdown(), server.server_close(), root.destroy()),
+        cursor="hand2"
+    )
+    btn_stop.pack(side=tk.LEFT, padx=8)
+
+    # Handle window close button
+    root.protocol("WM_DELETE_WINDOW", lambda: (server.shutdown(), server.server_close(), root.destroy()))
+    
+    # Bring window to front
+    root.reveal = lambda: (root.lift(), root.attributes("-topmost", True), root.after_idle(root.attributes, "-topmost", False))
+    root.reveal()
+    
+    root.mainloop()
+
+def run_ctypes_gui(server):
+    import ctypes
+    
+    title = "ACI Manager ToolSet"
+    message = (
+        "ACI Manager Local Proxy Server is now running!\n\n"
+        f"  • Local Access: http://localhost:{PORT}\n"
+        f"  • Target APIC:  {TARGET}\n\n"
+        "Would you like to open the web application in your default browser?"
+    )
+    
+    # MB_YESNO (4) | MB_ICONINFORMATION (0x40)
+    response = ctypes.windll.user32.MessageBoxW(0, message, title, 4 | 0x40)
+    
+    if response == 6: # IDYES
+        webbrowser.open(f"http://localhost:{PORT}")
+        
+    # Dialog 2: Keep alive & allow shutdown
+    keep_alive_message = (
+        "ACI Manager Local Proxy Server remains active.\n\n"
+        "Click OK to stop the server and exit the application."
+    )
+    # MB_OK (0) | MB_ICONINFORMATION (0x40)
+    ctypes.windll.user32.MessageBoxW(0, keep_alive_message, title, 0 | 0x40)
+    
+    # Shutdown server
+    server.shutdown()
+    server.server_close()
+
+def run_gui(server):
+    try:
+        run_tkinter_gui(server)
+    except (ImportError, Exception):
+        run_ctypes_gui(server)
+
 if __name__ == "__main__":
     print(f"""
-╔══════════════════════════════════════════════════════╗
-║           ACI Manager — Local Dev Server             ║
-╠══════════════════════════════════════════════════════╣
-║  App:    http://localhost:{PORT}                     ║
-║  Proxy → {TARGET}                                    ║
-╚══════════════════════════════════════════════════════╝
++------------------------------------------------------+
+|           ACI Manager - Local Dev Server             |
++------------------------------------------------------+
+|  App:    http://localhost:{PORT}                     |
+|  Proxy -> {TARGET}                                   |
++------------------------------------------------------+
 
   Open your browser to:  http://localhost:{PORT}
   Login APIC URL field:  http://localhost:{PORT}
   Press Ctrl+C to stop.
 """)
+    
     server = HTTPServer(("", PORT), Handler)
+    
+    # Start server in a background thread
+    server_thread = threading.Thread(target=server.serve_forever, daemon=True)
+    server_thread.start()
+
     try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        print("\n[devserver] KeyboardInterrupt received. Shutting down...")
+        run_gui(server)
+    except Exception as e:
+        # Fallback to standard console blocking loop if GUI fails to start
+        print(f"[devserver] GUI failed to start ({e}). Running in console mode.")
         try:
+            import time
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("\n[devserver] KeyboardInterrupt received. Shutting down...")
+            server.shutdown()
             server.server_close()
-        except Exception:
-            pass
