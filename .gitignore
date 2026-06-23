@@ -8,6 +8,7 @@
 !aci-manager.html
 !aci-proxy.py
 !README.md
+!.env.template
 !LICENSE
 !Capture.png
 !.gitignore
