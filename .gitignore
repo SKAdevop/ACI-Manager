@@ -12,8 +12,6 @@
 !LICENSE
 !Capture.png
 !.gitignore
-!setup.iss
-!ACI Manager.ico
 
 # Blacklist sensitive, temporary, or external folders/files
 apic-mcp-server/
