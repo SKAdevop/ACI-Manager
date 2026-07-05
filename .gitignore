@@ -14,7 +14,6 @@
 !.gitignore
 !setup.iss
 !ACI Manager.ico
-!.github/workflows/build-release.yml
 
 # Blacklist sensitive, temporary, or external folders/files
 apic-mcp-server/
